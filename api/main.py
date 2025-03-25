@@ -11,7 +11,7 @@ import asyncio
 
 from app.main import setup_bot
 
-from db.admin import attach_admin_panel
+# from db.admin import attach_admin_panel
 
 
 class ProjectSettings(BaseSettings):
@@ -77,7 +77,7 @@ def init_web_application():
 
     application.include_router(task_router)
 
-    attach_admin_panel(application)
+    # attach_admin_panel(application)
 
     return application
 

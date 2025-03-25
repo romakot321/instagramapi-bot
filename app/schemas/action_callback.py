@@ -1,16 +1,34 @@
 from enum import Enum
 
 from aiogram.filters.callback_data import CallbackData
-from pydantic import Field, AliasChoices
+from pydantic import BaseModel, Field, AliasChoices, computed_field
+
+
+class ButtonData(BaseModel):
+    text: str | None = None
+    action: str = Field(exclude=True)
+
+    @computed_field
+    def callback_data(self) -> str:
+        return ActionCallback(action=self.action).pack()
 
 
 class Action(Enum):
-    task_reload = dict(action_name='task_reload', screen_name='Обновить')
-    task_start = dict(action_name='task_start', screen_name=None)
+    main_menu = ButtonData(action="main_menu", text="В меню")
+    add_tracking = ButtonData(action="add_tracking", text="Добавить профиль")
+    show_trackings = ButtonData(action="show_trackings", text="Мои профили")
+    subscription_menu = ButtonData(action="subscription_menu", text="Подписка")
 
-    def __init__(self, values):
-        self.action_name = values.get('action_name')
-        self.screen_name = values.get('screen_name')
+    tracking_followers = ButtonData(action="tracking_followers", text="Подписчики")
+    tracking_stats = ButtonData(action="tracking_stats", text="Статистика")
+    tracking_show = ButtonData(action="tracking_show", text=None)
+
+    def __init__(self, value: ButtonData):
+        self.action = value.action
+        self.text = value.text
+
+    def model_dump(self) -> dict:
+        return self.value.model_dump()
 
 
 class ActionCallback(CallbackData, prefix='action'):
@@ -36,6 +54,5 @@ class PaginatedActionCallback(ActionCallback, prefix='paginated_action'):
     page: int = 0
 
 
-class TaskActionCallback(PaginatedActionCallback, prefix='task_action'):
-    task_id: int = Field(validation_alias=AliasChoices('id', 'task_id'))
-
+class TrackingActionCallback(PaginatedActionCallback, prefix="tracking_action"):
+    username: str

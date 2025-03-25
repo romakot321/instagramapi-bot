@@ -18,7 +18,7 @@ def build_aiogram_method(
         telegram_id,
         message: TextMessage | MediaMessage,
         use_edit: bool = False,
-) -> SendMessage | SendDocument | None:
+) -> SendMessage | SendDocument:
     """Return None if unknown message type"""
     if use_edit:
         method = __message_type_to_edit_method.get(type(message))

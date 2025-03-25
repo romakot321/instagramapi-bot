@@ -5,7 +5,7 @@ import copy
 import json
 import asyncio
 
-from app.schemas.action_callback import Action, TaskActionCallback
+from app.schemas.action_callback import Action
 
 
 class BotController:
@@ -38,13 +38,6 @@ class BotController:
         }
     }
 
-    @staticmethod
-    def _parse_task(task_id: int) -> str:
-        return TaskActionCallback(
-            action=Action.task_start.action_name,
-            task_id=task_id
-        ).pack()
-
     @classmethod
     def _pack_webhook_data(cls, chat_id: int, data: str) -> str:
         webhookdata = copy.deepcopy(cls.__webhook_data)
@@ -52,13 +45,4 @@ class BotController:
         webhookdata['callback_query']['message']['chat']['id'] = chat_id
         webhookdata['callback_query']['data'] = data
         return json.dumps(webhookdata)
-
-    @classmethod
-    async def start_task(cls, task_id: int):
-        task_data = cls._parse_task(task_id)
-        webhook_data = cls._pack_webhook_data(0, task_data)
-
-        asyncio.create_task(app.dispatcher_instance.feed_webhook_update(
-            app.bot_instance, app.bot_instance.session.json_loads(webhook_data)
-        ))
 
