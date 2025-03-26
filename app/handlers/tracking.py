@@ -74,6 +74,21 @@ async def tracking_show(
 
 
 @router.callback_query(
+    ActionCallback.filter(
+        F.action == Action.tracking_subscribe.action
+    )
+)
+async def tracking_subscribe(
+    callback_query: CallbackQuery,
+    callback_data: TrackingActionCallback,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
+):
+    method = await tracking_service.handle_tracking_subscribe(callback_query, callback_data)
+    await bot(method)
+
+
+@router.callback_query(
     TrackingActionCallback.filter(
         F.action == Action.tracking_followers.action
     )

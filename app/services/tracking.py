@@ -56,13 +56,21 @@ class TrackingService:
         yield build_aiogram_method(msg.from_user.id, message)
 
         info = await self.instagram_repository.get_user_info(msg.text.strip())
-        await self.tracking_repository.create(instagram_username=info.username, creator_telegram_id=msg.from_user.id)
 
         message = TextMessage(
             text=build_user_info_text(info),
             reply_markup=self.keyboard_repository.build_tracking_keyboard(info.username)
         )
         yield build_aiogram_method(msg.from_user.id, message)
+
+    async def handle_tracking_subscribe(self, query: CallbackQuery, data: TrackingActionCallback) -> TelegramMethod:
+        await self.tracking_repository.create(instagram_username=data.username, creator_telegram_id=query.from_user.id)
+        message = TextMessage(
+            text="Вы успешно подписались на пользователя @" + data.username,
+            reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(data.username),
+            message_id=query.message.message_id
+        )
+        return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
     async def handle_show_trackings(self, query: CallbackQuery) -> TelegramMethod:
         trackings = await self.tracking_repository.list(creator_telegram_id=query.from_user.id)
@@ -86,7 +94,7 @@ class TrackingService:
         info = await self.instagram_repository.get_user_followers(data.username)
         message = TextMessage(
             text=build_user_followers_text(info),
-            reply_markup=self.keyboard_repository.build_tracking_followers_keyboard(data.username),
+            reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(data.username),
             message_id=query.message.message_id
         )
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
@@ -95,7 +103,7 @@ class TrackingService:
         info = await self.instagram_repository.get_user_stats(data.username)
         message = TextMessage(
             text=build_user_stats_text(info),
-            reply_markup=self.keyboard_repository.build_tracking_followers_keyboard(data.username),
+            reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(data.username),
             message_id=query.message.message_id
         )
         return build_aiogram_method(query.from_user.id, message, use_edit=True)

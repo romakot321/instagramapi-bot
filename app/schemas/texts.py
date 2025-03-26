@@ -1,6 +1,7 @@
 import re
 
-from app.schemas.instagram import InstagramMediaSchema, InstagramUserSchema, InstagramUserStatsSchema
+from app.schemas.instagram import InstagramMediaSchema, InstagramMediaStatsSchema, InstagramUserSchema, InstagramUserStatsSchema
+from db.tables import TrackingMedia
 
 
 def escape_markdown(text: str) -> str:
@@ -47,26 +48,14 @@ def build_user_followers_text(followers: list[InstagramUserSchema]) -> str:
     return "\n".join(_user_follower_text.format(user=user) for user in followers)
 
 
-_media_info_text = """
-Пост {schema.title}
-{schema.caption_text}
-Тип поста: {schema.media_type}
-Комментариев: {schema.comment_count}
-Лайков: {schema.like_count}
-Запусков: {schema.play_count}
-Просмотров: {schema.view_count}
-Ссылки:
-{urls}
+_media_stats_text = """
+{media.caption_text}
+Статистика от {stats.created_at}
+- Комментариев: {stats.comment_count_difference}
+- Лайков: {stats.like_count_difference}
+- Просмотров: {stats.play_count_difference}
 """
 
 
-def build_media_info_text(schema: InstagramMediaSchema) -> str:
-    urls = str(schema.thumbnail_url) if schema.thumbnail_url else ""
-    for resource in schema.resources:
-        urls += "\n" + str(resource.thumbnail_url)
-
-    return _media_info_text.format(schema=schema, urls=urls)
-
-
-def build_media_info_list_text(schemas: list[InstagramMediaSchema]) -> str:
-    return "\n\n".join(build_media_info_text(schema) for schema in schemas)
+def build_media_stats_text(stats: InstagramMediaStatsSchema, media: TrackingMedia) -> str:
+    return _media_stats_text.format(media=media, stats=stats)

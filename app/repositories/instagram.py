@@ -1,7 +1,7 @@
 from aiohttp import ClientSession
 import os
 
-from app.schemas.instagram import InstagramMediaSchema, InstagramUserSchema, InstagramUserStatsSchema
+from app.schemas.instagram import InstagramMediaSchema, InstagramMediaStatsSchema, InstagramMediaUserStatsSchema, InstagramUserSchema, InstagramUserStatsSchema
 
 
 class InstagramRepository:
@@ -37,3 +37,17 @@ class InstagramRepository:
             InstagramMediaSchema.model_validate(item)
             for item in body
         ]
+
+    async def get_media_stats(self, media_id: str) -> InstagramMediaStatsSchema:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get("/api/media/" + media_id + "/stats", params={"days": 7})
+            assert resp.status == 200, await resp.text()
+            body = await resp.json()
+        return InstagramMediaStatsSchema.model_validate(body)
+
+    async def get_media_user_stats(self, username: str) -> InstagramMediaUserStatsSchema:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get("/api/media/stats", params={"days": 7})
+            assert resp.status == 200, await resp.text()
+            body = await resp.json()
+        return InstagramMediaUserStatsSchema.model_validate(body)

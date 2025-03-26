@@ -16,7 +16,7 @@ class BaseMixin:
 class User(BaseMixin, Base):
     __tablename__ = "users"
 
-    telegram_id: M[int] = column(type_=BIGINT, unique=True)
+    telegram_id: M[int] = column(type_=BIGINT, unique=True, index=True)
 
     trackings: M[list['Tracking']] = relationship(back_populates="creator", lazy="noload")
 
@@ -24,8 +24,20 @@ class User(BaseMixin, Base):
 class Tracking(BaseMixin, Base):
     __tablename__ = "trackings"
 
+    creator_telegram_id: M[int] = column(ForeignKey("users.telegram_id", ondelete="CASCADE"), index=True)
+    instagram_username: M[str] = column(index=True)
+
+    creator: M['User'] = relationship(back_populates="trackings", lazy="selectin")
+
+
+class TrackingMedia(BaseMixin, Base):
+    __tablename__ = "tracking_medias"
+
     creator_telegram_id: M[int] = column(ForeignKey("users.telegram_id", ondelete="CASCADE"))
-    instagram_username: M[str]
+    instagram_username: M[str] = column(index=True)
+    instagram_id: M[str]
+    caption_text: M[str | None]
+    display_uri: M[str | None]
 
     creator: M['User'] = relationship(back_populates="trackings", lazy="selectin")
 

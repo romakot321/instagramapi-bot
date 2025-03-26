@@ -20,6 +20,7 @@ class InstagramUserStatsSchema(BaseModel):
 
 
 class InstagramMediaSchema(BaseModel):
+    external_id: str
     caption_text: str | None = None
     created_at: dt.datetime | None = None
     display_uri: str | None = None
@@ -28,3 +29,17 @@ class InstagramMediaSchema(BaseModel):
     like_count: int
     play_count: int | None = None
 
+
+class InstagramMediaStatsSchema(BaseModel):
+    external_id: str
+    comment_count_difference: int
+    like_count_difference: int
+    play_count_difference: int | None = None
+    created_at: dt.datetime | None = None
+
+
+class InstagramMediaUserStatsSchema(BaseModel):
+    like_count_sum: int
+    comment_count_sum: int
+    play_count_sum: int
+    count: int

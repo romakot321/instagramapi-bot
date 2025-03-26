@@ -19,9 +19,13 @@ class Action(Enum):
     show_trackings = ButtonData(action="show_trackings", text="Мои профили")
     subscription_menu = ButtonData(action="subscription_menu", text="Подписка")
 
+    tracking_subscribe = ButtonData(action="tracking_subscribe", text="Подписаться")
     tracking_followers = ButtonData(action="tracking_followers", text="Подписчики")
     tracking_stats = ButtonData(action="tracking_stats", text="Статистика")
     tracking_show = ButtonData(action="tracking_show", text=None)
+    show_tracking_media = ButtonData(action="tracking_media", text="Публикации")
+
+    tracking_media_stats = ButtonData(action="tracking_media_stats", text="Статистика")
 
     def __init__(self, value: ButtonData):
         self.action = value.action
@@ -56,3 +60,7 @@ class PaginatedActionCallback(ActionCallback, prefix='paginated_action'):
 
 class TrackingActionCallback(PaginatedActionCallback, prefix="tracking_action"):
     username: str
+
+
+class TrackingMediaActionCallback(PaginatedActionCallback, prefix="tracking_media_action"):
+    instagram_id: str
