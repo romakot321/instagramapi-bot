@@ -74,7 +74,7 @@ async def tracking_show(
 
 
 @router.callback_query(
-    ActionCallback.filter(
+    TrackingActionCallback.filter(
         F.action == Action.tracking_subscribe.action
     )
 )

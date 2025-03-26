@@ -13,7 +13,6 @@ from app.repositories.keyboard import KeyboardRepository
 from app.repositories.user import UserRepository
 from app.schemas.action_callback import Action
 from app.schemas.message import TextMessage
-from app.schemas.texts import build_media_info_list_text, build_user_info_text
 from app.schemas.texts import start_text
 from app.services.utils import build_aiogram_method
 
@@ -59,34 +58,3 @@ class UserService:
         if (await self.user_repository.get_by_telegram_id(msg.from_user.id)) is None:
             return await self._handle_new_user(msg)
         return await self._handle_main_menu_show(msg)
-
-    async def handle_user_get(self, msg: Message, bot: Bot):
-        message = TextMessage(
-            text="Получение данных...",
-        )
-        method = build_aiogram_method(msg.from_user.id, message)
-        inprogress_message = await bot(method)
-
-        schema = await self.instagram_repository.get_user_info(msg.text.strip().lower())
-        message = TextMessage(
-            text=build_user_info_text(schema), message_id=inprogress_message.message_id
-        )
-        method = build_aiogram_method(msg.from_user.id, message, use_edit=True)
-        await bot(method)
-
-    async def handle_media_get(self, msg: Message, bot: Bot):
-        message = TextMessage(
-            text="Получение данных...",
-        )
-        method = build_aiogram_method(msg.from_user.id, message)
-        inprogress_message = await bot(method)
-
-        schemas = await self.instagram_repository.get_user_media_info(
-            msg.text.strip().lower()
-        )
-        message = TextMessage(
-            text=build_media_info_list_text(schemas),
-            message_id=inprogress_message.message_id,
-        )
-        method = build_aiogram_method(msg.from_user.id, message, use_edit=True)
-        await bot(method)

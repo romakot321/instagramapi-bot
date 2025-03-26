@@ -28,6 +28,12 @@ class KeyboardRepository:
             ).pack(),
         )
         builder.button(
+            text=Action.show_tracking_media.text,
+            callback_data=TrackingActionCallback(
+                action=Action.show_tracking_media.action, username=username
+            ).pack(),
+        )
+        builder.button(
             text=Action.tracking_stats.text,
             callback_data=TrackingActionCallback(
                 action=Action.tracking_stats.action, username=username

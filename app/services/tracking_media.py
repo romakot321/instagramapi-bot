@@ -1,22 +1,20 @@
-import types
 import datetime as dt
-from typing import Annotated, AsyncGenerator, Generator
+from typing import Annotated
 
 from aiogram3_di import Depends
 
 from aiogram import Bot
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
-from aiogram import types as types
+from aiogram import types
 from aiogram.methods import EditMessageText, TelegramMethod
 
 from app.repositories.instagram import InstagramRepository
 from app.repositories.keyboard import KeyboardRepository
 from app.repositories.tracking_media import TrackingMediaRepository
 from app.schemas.action_callback import Action, TrackingActionCallback, TrackingMediaActionCallback
-from app.schemas.forms import TrackingMediaCreateForm
 from app.schemas.message import TextMessage
-from app.schemas.texts import build_media_stats_text, build_user_followers_text, build_user_info_text, build_user_stats_text, start_text
+from app.schemas.texts import build_media_stats_text
 from app.services.utils import build_aiogram_method
 from db.tables import TrackingMedia
 
