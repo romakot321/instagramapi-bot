@@ -19,8 +19,17 @@ class TrackingRepository[Table: Tracking, int](BaseRepository):
             )
         )
 
-    async def get(self, model_id: int) -> Tracking:
-        return await self._get_one(id=model_id)
+    async def get(
+        self,
+        creator_telegram_id: int,
+        instagram_username: str,
+        mute_not_found_exception: bool = False,
+    ) -> Tracking:
+        return await self._get_one(
+            creator_telegram_id=creator_telegram_id,
+            instagram_username=instagram_username,
+            mute_not_found_exception=mute_not_found_exception,
+        )
 
     async def update(self, model_id: int, **fields) -> Tracking:
         return await self._update(model_id, **fields)

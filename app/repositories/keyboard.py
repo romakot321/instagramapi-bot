@@ -1,7 +1,12 @@
 from aiogram import types
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
-from app.schemas.action_callback import Action, ActionCallback, TrackingActionCallback, TrackingMediaActionCallback
+from app.schemas.action_callback import (
+    Action,
+    ActionCallback,
+    TrackingActionCallback,
+    TrackingMediaActionCallback,
+)
 from db.tables import Tracking, TrackingMedia
 
 
@@ -13,14 +18,17 @@ class KeyboardRepository:
         builder.adjust(1)
         return builder.as_markup()
 
-    def build_tracking_keyboard(self, username: str) -> types.InlineKeyboardMarkup:
+    def build_tracking_keyboard(
+        self, username: str, subscribed: bool
+    ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.button(
-            text=Action.tracking_subscribe.text,
-            callback_data=TrackingActionCallback(
-                action=Action.tracking_subscribe.action, username=username
-            ).pack(),
-        )
+        if not subscribed:
+            builder.button(
+                text=Action.tracking_subscribe.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_subscribe.action, username=username
+                ).pack(),
+            )
         builder.button(
             text=Action.tracking_followers.text,
             callback_data=TrackingActionCallback(
