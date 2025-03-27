@@ -27,6 +27,10 @@ class Action(Enum):
 
     tracking_media_stats = ButtonData(action="tracking_media_stats", text="Статистика")
 
+    subscription_add = ButtonData(action="subscription_add", text="Приобрести подписку")
+    subscription_cancel = ButtonData(action="subscription_cancel", text="Отменить подписку")
+    subscription_add_trackings = ButtonData(action="subscription_add_trackings", text="Купить отслеживания")
+
     def __init__(self, value: ButtonData):
         self.action = value.action
         self.text = value.text
@@ -64,3 +68,7 @@ class TrackingActionCallback(PaginatedActionCallback, prefix="tracking_action"):
 
 class TrackingMediaActionCallback(PaginatedActionCallback, prefix="tracking_media_action"):
     instagram_id: str
+
+
+class SubscriptionActionCallback(ActionCallback, prefix="subscription_action"):
+    pass

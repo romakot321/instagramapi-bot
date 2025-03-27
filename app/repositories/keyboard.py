@@ -1,5 +1,7 @@
 from aiogram import types
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+import os
+from urllib.parse import urlparse
 
 from app.schemas.action_callback import (
     Action,
@@ -9,12 +11,37 @@ from app.schemas.action_callback import (
 )
 from db.tables import Tracking, TrackingMedia
 
+BOT_WEBHOOK_URL = os.getenv("BOT_WEBHOOK_URL", "")
+
 
 class KeyboardRepository:
     def build_main_keyboard(self) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(**Action.add_tracking.model_dump())
         builder.button(**Action.show_trackings.model_dump())
+        builder.button(**Action.subscription_menu.model_dump())
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def build_paywall_keyboard(self) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            text=Action.subscription_add.text,
+            web_app=types.WebAppInfo(url="https://" + urlparse(BOT_WEBHOOK_URL).netloc + "/paywall")
+        )
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def build_to_paywall_keyboard(self) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(**Action.subscription_add.model_dump())
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def build_subscription_menu_keyboard(self) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(**Action.subscription_cancel.model_dump())
+        builder.button(**Action.main_menu.model_dump())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -48,6 +75,12 @@ class KeyboardRepository:
             ).pack(),
         )
         builder.button(**Action.show_trackings.model_dump() | {"text": "К списку"})
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def build_tracking_show_full_keyboard(self) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(**Action.subscription_add.model_dump() | {"text": "Показать все данные"})
         builder.adjust(1)
         return builder.as_markup()
 
@@ -85,7 +118,7 @@ class KeyboardRepository:
         builder = InlineKeyboardBuilder()
         for media in tracking_medias:
             builder.button(
-                text="@" + media.instagram_id,
+                text="@" + media.created_at.isoformat(sep=" "),
                 callback_data=TrackingMediaActionCallback(
                     action=Action.tracking_media_stats.action,
                     instagram_id=media.instagram_id,

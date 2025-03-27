@@ -1,7 +1,7 @@
 import re
 
 from app.schemas.instagram import InstagramMediaSchema, InstagramMediaStatsSchema, InstagramUserSchema, InstagramUserStatsSchema
-from db.tables import TrackingMedia
+from db.tables import Subscription, TrackingMedia
 
 
 def escape_markdown(text: str) -> str:
@@ -27,6 +27,16 @@ _user_info_text = """
 Подписок: {schema.following_count}
 """
 
+_user_info_masked_text = """
+Никнейм: {schema.username}
+Имя: {schema.full_name}
+Постов: ###
+Подписчиков: {schema.followers_count}
+Подписок: {schema.following_count}
+
+Некоторые данные скрыты
+"""
+
 _user_stats_text = """
 Статистика от {schema.previous_stats_date}
 Изменение постов: {schema.media_count_difference}
@@ -36,8 +46,13 @@ _user_stats_text = """
 
 _user_follower_text = """{user.full_name} (@{user.username})"""
 
+
 def build_user_info_text(schema: InstagramUserSchema) -> str:
     return _user_info_text.format(schema=schema)
+
+
+def build_user_info_masked_text(schema: InstagramUserSchema) -> str:
+    return _user_info_masked_text.format(schema=schema)
 
 
 def build_user_stats_text(schema: InstagramUserStatsSchema) -> str:
@@ -59,3 +74,16 @@ _media_stats_text = """
 
 def build_media_stats_text(stats: InstagramMediaStatsSchema, media: TrackingMedia) -> str:
     return _media_stats_text.format(media=media, stats=stats)
+
+
+_subscription_info_text = """
+Подписка активна до {subscription.expire_at}
+"""
+
+subscription_paywall_text = """
+Оформите подписку для продолжения
+"""
+
+
+def build_subscription_info_text(subscription: Subscription) -> str:
+    return _subscription_info_text.format(subscription=subscription)

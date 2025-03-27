@@ -47,7 +47,7 @@ class TrackingMediaService:
 
     async def _load_tracking_medias(self, username: str, creator_telegram_id: int) -> list[TrackingMedia]:
         tracking_medias = await self.tracking_media_repository.list(instagram_username=username)
-        if tracking_medias and (dt.datetime.now() - tracking_medias[-1].created_at).seconds <= 3600 * 3:
+        if tracking_medias:
             return tracking_medias
 
         info = await self.instagram_repository.get_user_media_info(username)

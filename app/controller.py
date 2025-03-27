@@ -5,7 +5,7 @@ import copy
 import json
 import asyncio
 
-from app.schemas.action_callback import Action
+from app.schemas.action_callback import Action, SubscriptionActionCallback
 
 
 class BotController:
@@ -45,4 +45,15 @@ class BotController:
         webhookdata['callback_query']['message']['chat']['id'] = chat_id
         webhookdata['callback_query']['data'] = data
         return json.dumps(webhookdata)
+
+    @classmethod
+    async def send_subscription_created(cls, user_telegram_id: int):
+        data = SubscriptionActionCallback(action=Action.subscription_add.action).pack()
+        webhook_data = cls._pack_webhook_data(user_telegram_id, data)
+
+        asyncio.create_task(
+            app.dispatcher_instance.feed_webhook_update(
+                app.bot_instance, app.bot_instance.session.json_loads(webhook_data)
+            )
+        )
 
