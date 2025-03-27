@@ -23,9 +23,9 @@ class Action(Enum):
     tracking_followers = ButtonData(action="tracking_followers", text="Подписчики")
     tracking_stats = ButtonData(action="tracking_stats", text="Статистика")
     tracking_show = ButtonData(action="tracking_show", text=None)
-    show_tracking_media = ButtonData(action="tracking_media", text="Публикации")
+    show_tracking_media = ButtonData(action="media", text="Публикации")
 
-    tracking_media_stats = ButtonData(action="tracking_media_stats", text="Статистика")
+    tracking_media_stats = ButtonData(action="media_stats", text="Статистика")
 
     def __init__(self, value: ButtonData):
         self.action = value.action
@@ -62,5 +62,5 @@ class TrackingActionCallback(PaginatedActionCallback, prefix="tracking_action"):
     username: str
 
 
-class TrackingMediaActionCallback(PaginatedActionCallback, prefix="tracking_media_action"):
+class TrackingMediaActionCallback(PaginatedActionCallback, prefix="media_action"):
     instagram_id: str
