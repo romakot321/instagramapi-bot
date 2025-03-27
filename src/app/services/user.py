@@ -43,18 +43,32 @@ class UserService:
             keyboard_repository=keyboard_repository,
         )
 
-    async def _handle_new_user(self, msg: Message):
-        await self.user_repository.create(telegram_id=msg.from_user.id)
-        message = TextMessage(text=start_text, reply_markup=self.keyboard_repository.build_main_keyboard())
-        return build_aiogram_method(msg.from_user.id, message)
-
-    async def _handle_main_menu_show(self, msg: Message):
+    async def _handle_new_user(self, tg_object: Message | CallbackQuery):
+        await self.user_repository.create(telegram_id=tg_object.from_user.id)
         message = TextMessage(
-            text="Выберите действие", reply_markup=self.keyboard_repository.build_main_keyboard()
+            text=start_text, reply_markup=self.keyboard_repository.build_main_keyboard()
         )
-        return build_aiogram_method(msg.from_user.id, message)
+        return build_aiogram_method(tg_object.from_user.id, message)
 
-    async def handle_user_start(self, msg: Message):
-        if (await self.user_repository.get_by_telegram_id(msg.from_user.id)) is None:
-            return await self._handle_new_user(msg)
-        return await self._handle_main_menu_show(msg)
+    async def _handle_main_menu_show(self, tg_object: Message | CallbackQuery):
+        message = TextMessage(
+            text="Выберите действие",
+            reply_markup=self.keyboard_repository.build_main_keyboard(),
+            message_id=(
+                tg_object.message.message_id
+                if isinstance(tg_object, CallbackQuery)
+                else None
+            ),
+        )
+        return build_aiogram_method(
+            tg_object.from_user.id,
+            message,
+            use_edit=isinstance(tg_object, CallbackQuery),
+        )
+
+    async def handle_user_start(self, tg_object: Message | CallbackQuery):
+        if (
+            await self.user_repository.get_by_telegram_id(tg_object.from_user.id)
+        ) is None:
+            return await self._handle_new_user(tg_object)
+        return await self._handle_main_menu_show(tg_object)
