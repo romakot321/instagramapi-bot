@@ -73,9 +73,11 @@ def init_web_application():
         register_exception(application)
         register_cors(application)
 
-    from api.routes.task import router as task_router
+    from api.routes.subscription import router as subscription_router
+    from api.routes.web import router as web_router
 
-    application.include_router(task_router)
+    application.include_router(subscription_router)
+    application.include_router(web_router)
 
     # attach_admin_panel(application)
 

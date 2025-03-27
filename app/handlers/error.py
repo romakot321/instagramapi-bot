@@ -14,6 +14,7 @@ def setup_error_handlers(dispatcher: Dispatcher):
         ExceptionTypeFilter(HTTPException), F.update.message.as_("message")
     )
     async def handle_http_error_msg(event: ErrorEvent, message: Message):
+        logger.exception(event.exception)
         match event.exception.status_code:
             case 404:
                 await message.answer("Не найдено")

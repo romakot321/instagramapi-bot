@@ -41,9 +41,9 @@ async def subscription_add(
 )
 async def subscription_add_created(
     query: CallbackQuery,
-    data: SubscriptionActionCallback,
+    callback_data: SubscriptionActionCallback,
     bot: Bot,
     subscription_service: Annotated[SubscriptionService, Depends(SubscriptionService.init)],
 ):
-    method = await subscription_service.handle_subscription_add_created(query, data)
+    method = await subscription_service.handle_subscription_add_created(query, callback_data)
     await bot(method)
