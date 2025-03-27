@@ -16,10 +16,21 @@ class BaseMixin:
 class User(BaseMixin, Base):
     __tablename__ = "users"
 
-    telegram_id: M[int] = column(type_=BIGINT, unique=True, index=True)
+    telegram_id: M[int] = column(type_=BIGINT, unique=True)
 
     trackings: M[list['Tracking']] = relationship(back_populates="creator", lazy="noload")
     trackings_medias: M[list['TrackingMedia']] = relationship(back_populates="creator", lazy="noload")
+    subscriptions: M[list['Subscription']] = relationship(back_populates="user", lazy="noload")
+
+
+class Subscription(BaseMixin, Base):
+    __tablename__ = "subscriptions"
+
+    tariff_id: M[int]
+    user_telegram_id: M[int] = column(ForeignKey("users.telegram_id", ondelete="CASCADE"))
+    expire_at: M[dt.datetime]
+
+    user: M['User'] = relationship(back_populates="subscriptions", lazy="noload")
 
 
 class Tracking(BaseMixin, Base):
