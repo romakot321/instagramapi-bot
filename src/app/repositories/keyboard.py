@@ -35,6 +35,7 @@ class KeyboardRepository:
     def build_to_paywall_keyboard(self) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(**Action.subscription_add.model_dump())
+        builder.button(**Action.main_menu.model_dump())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -96,6 +97,7 @@ class KeyboardRepository:
                     username=tracking.instagram_username,
                 ).pack(),
             )
+        builder.button(**Action.main_menu.model_dump())
         builder.adjust(1)
         return builder.as_markup()
 

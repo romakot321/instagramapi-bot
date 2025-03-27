@@ -1,34 +1,88 @@
-FROM python:3.13 AS PackageBuilder
-COPY ./requirements.txt ./requirements.txt
-RUN pip3 wheel -r requirements.txt
-RUN pip3 wheel gunicorn
+FROM python:3.13 AS build
 
+ARG python_version=3.13
+
+SHELL ["/bin/sh", "-exc"]
+
+RUN <<EOF
+apt-get update --quiet
+apt-get install --quiet --no-install-recommends --assume-yes \
+  build-essential
+EOF
+
+COPY --link --from=ghcr.io/astral-sh/uv:0.6 /uv /usr/local/bin/uv
+
+ENV UV_PYTHON="python$python_version" \
+  UV_PYTHON_DOWNLOADS=never \
+  UV_PROJECT_ENVIRONMENT=/app \
+  UV_LINK_MODE=copy \
+  UV_COMPILE_BYTECODE=1 \
+  PYTHONOPTIMIZE=1
+
+COPY pyproject.toml uv.lock /_project/
+
+RUN --mount=type=cache,destination=/root/.cache/uv <<EOF
+cd /_project
+uv sync \
+  --no-dev \
+  --no-install-project \
+  --frozen
+EOF
+
+ENV UV_PYTHON=$UV_PROJECT_ENVIRONMENT
+
+COPY src/ /_project/src
+
+RUN --mount=type=cache,destination=/root/.cache/uv <<EOF
+cd /_project
+uv sync \
+  --no-dev \
+  --no-editable \
+  --frozen
+EOF
 
 FROM python:3.13-slim
-EXPOSE 80
 
-# Setup user
-ENV UID=2000
-ENV GID=2000
+ARG user_id=1000
+ARG group_id=1000
+ARG python_version=3.13
 
-RUN groupadd -g "${GID}" python \
-  && useradd --create-home --no-log-init --shell /bin/bash -u "${UID}" -g "${GID}" python
+ENTRYPOINT ["/docker-entrypoint.sh"]
+STOPSIGNAL SIGINT
+EXPOSE 8080/tcp
 
-USER python
-WORKDIR /home/python
+SHELL ["/bin/sh", "-exc"]
 
-RUN mkdir ./wheels
-COPY --from=PackageBuilder ./*.whl ./wheels/
-RUN pip3 install ./wheels/*.whl --no-warn-script-location
+RUN <<EOF
+[ $user_id -gt 0 ] && user="$(id --name --user $user_id 2> /dev/null)" && userdel "$user"
 
-COPY setup.py ./
-COPY ./api ./api
-COPY ./db ./db
-COPY ./app ./app
-RUN pip3 install .
+if [ $group_id -gt 0 ]; then
+  group="$(id --name --group $group_id 2> /dev/null)" && groupdel "$group"
+  groupadd --gid $group_id app
+fi
 
-ENV PATH="$PATH:/home/python/.local/bin"
-CMD cd db && \
-    alembic -c ./alembic.prod.ini upgrade head && \
-    cd /home/python && \
-    gunicorn api.main:fastapi_app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:80 --forwarded-allow-ips="*"
+[ $user_id -gt 0 ] && useradd --uid $user_id --gid $group_id --home-dir /app app
+EOF
+
+RUN <<EOF
+apt-get update --quiet
+rm -rf /var/lib/apt/lists/*
+EOF
+
+ENV PATH=/app/bin:$PATH \
+  PYTHONOPTIMIZE=1 \
+  PYTHONFAULTHANDLER=1 \
+  PYTHONUNBUFFERED=1
+
+COPY docker-entrypoint.sh /
+
+COPY --link --chown=$user_id:$group_id --from=build /app/ /app
+
+USER $user_id:$group_id
+WORKDIR /app
+
+RUN <<EOF
+python --version
+python -I -m site
+python -I -c 'import app'
+EOF

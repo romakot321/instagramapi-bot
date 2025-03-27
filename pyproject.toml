@@ -1,0 +1,43 @@
+[project]
+name = "app"
+version = "1.0.0"
+authors = [
+    { name = "Roman", email = "play62342@gmail.com" },
+]
+# https://docs.astral.sh/uv/reference/resolver-internals/#requires-python
+requires-python = "==3.13.*"
+# https://docs.astral.sh/uv/concepts/dependencies/#project-dependencies
+dependencies = [
+    "aiogram==3.18.*",
+    "Jinja2==3.1.*",
+    "aiogram3-di==2.0.0",
+    "fastapi==0.115.*",
+    "uvicorn==0.34.*",
+    "gunicorn==23.0.*",
+    "SQLAlchemy==2.0.*",
+    "sqlalchemy-service==1.0.9",
+    "alembic==1.14.*",
+    "asyncpg==0.30.*"
+]
+
+# https://docs.astral.sh/uv/concepts/dependencies/#development-dependencies
+[dependency-groups]
+dev = [
+    "grpcio-tools==1.66.*",
+    "pytest==8.3.*",
+    "pynvim",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+include = ["src/api", "src/db"]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
+"api" = "src/api"
+"app" = "src/app"
+"db" = "src/db"

@@ -22,8 +22,6 @@ services:
       - .env
     networks:
       default:
-    ports:
-      - "5432:5432"
 
 networks:
   global_network:
