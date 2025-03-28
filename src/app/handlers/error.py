@@ -29,6 +29,7 @@ def setup_error_handlers(dispatcher: Dispatcher):
             event: ErrorEvent,
             query: CallbackQuery
     ):
+        logger.exception(event.exception)
         match event.exception.status_code:
             case 404:
                 await query.answer("Не найдено")
@@ -43,11 +44,10 @@ def setup_error_handlers(dispatcher: Dispatcher):
             event: ErrorEvent,
             query: CallbackQuery
     ):
-        assert 'message is not modified' in event.exception.message \
-               or 'canceled by new editMessageMedia request' in event.exception.message \
-               or 'message to delete not found' in event.exception.message \
-               or 'message to edit not found' in event.exception.message \
-               or 'bot was blocked by the user' in event.exception.message, event.exception
+        proper_messages = ['message is not modified', 'canceled by new editMessageMedia request', 'message to delete not found', 'message to edit not found', 'bot was blocked by the user']
+        if not any(msg in event.exception.message for msg in proper_messages):
+            logger.exception(event.exception)
+            return False
         try:
             await query.answer()
         except TelegramBadRequest:

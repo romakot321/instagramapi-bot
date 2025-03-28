@@ -128,14 +128,15 @@ class KeyboardRepository:
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         for media in tracking_medias:
-            builder.button(
-                text="@" + media.created_at.isoformat(sep=" "),
+            builder.row(types.InlineKeyboardButton(
+                text=media.created_at.isoformat(sep=" ", timespec="minutes"),
                 callback_data=TrackingMediaActionCallback(
                     action=Action.tracking_media_stats.action,
                     instagram_id=media.instagram_id,
+                    page=current_page
                 ).pack(),
-            )
-        builder.add(
+            ))
+        builder.row(
             *self.paginate_row(
                 total_media_count,
                 current_page,
@@ -145,18 +146,23 @@ class KeyboardRepository:
                 ),
             )
         )
-        builder.button(**Action.main_menu.model_dump())
-        builder.adjust(1)
+        builder.row(types.InlineKeyboardButton(
+            text="Назад",
+            callback_data=TrackingActionCallback(
+                action=Action.tracking_show.action,
+                username=tracking_medias[0].instagram_username
+            ).pack(),
+        ))
         return builder.as_markup()
 
     def build_to_show_tracking_media_keyboard(
-        self, tracking_username: str
+        self, tracking_username: str, page: int = 1
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
             text="Назад",
             callback_data=TrackingActionCallback(
-                action=Action.show_tracking_media.action, username=tracking_username
+                action=Action.show_tracking_media.action, username=tracking_username, page=page
             ).pack(),
         )
         builder.adjust(1)
@@ -180,14 +186,14 @@ class KeyboardRepository:
             )
         buttons.append(
             types.InlineKeyboardButton(
-                text=f"{current_page} / {total_pages}", callback_data=None
+                text=f"{current_page} / {total_pages}", callback_data="a"
             )
         )
         if current_page < total_pages:
             buttons.append(
                 types.InlineKeyboardButton(
                     text="➡️",
-                    callback_data=callback_data.replace(page=current_page - 1).pack(),
+                    callback_data=callback_data.replace(page=current_page + 1).pack(),
                 )
             )
         return buttons

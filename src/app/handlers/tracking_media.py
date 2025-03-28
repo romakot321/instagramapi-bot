@@ -20,14 +20,14 @@ router = Router(name=__name__)
         F.action == Action.show_tracking_media.action
     )
 )
-async def show_tracking_media_media(
+async def show_tracking_media(
     callback_query: CallbackQuery,
     callback_data: TrackingActionCallback,
     bot: Bot,
     tracking_media_service: Annotated[TrackingMediaService, Depends(TrackingMediaService.init)],
 ):
-    method = await tracking_media_service.handle_show_tracking_medias(callback_query, callback_data)
-    await bot(method)
+    for method in (await tracking_media_service.handle_show_tracking_medias(callback_query, callback_data)):
+        await bot(method)
 
 
 @router.callback_query(

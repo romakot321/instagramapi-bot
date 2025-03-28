@@ -30,8 +30,11 @@ class InstagramRepository:
         return InstagramUserStatsSchema.model_validate(body)
 
     async def get_user_media_info(self, username: str, max_id: str | None = None) -> InstagramMediaListSchema:
+        params = {"username": username, "count": 10}
+        if max_id is not None:
+            params["max_id"] = max_id
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/media", params={"username": username, "max_id": max_id, "count": 10})
+            resp = await session.get("/api/media", params=params)
             assert resp.status in (200, 201), await resp.text()
             body = await resp.json()
         return InstagramMediaListSchema.model_validate(body)
@@ -46,7 +49,7 @@ class InstagramRepository:
 
     async def get_media_user_stats(self, username: str) -> InstagramMediaUserStatsSchema:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/media/stats", params={"days": 7})
+            resp = await session.get("/api/media/stats", params={"days": 7, "username": username})
             assert resp.status == 200, await resp.text()
             body = await resp.json()
         return InstagramMediaUserStatsSchema.model_validate(body)

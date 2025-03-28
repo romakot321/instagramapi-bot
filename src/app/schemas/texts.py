@@ -34,15 +34,15 @@ _user_info_masked_text = """
 Подписчиков: {schema.followers_count}
 Подписок: {schema.following_count}
 
-Некоторые данные скрыты
+Некоторые данные и статистика скрыты
 """
 
 _user_stats_text = """
 Текущая статистика:
-- Количество постов: {current.count}
-- В среднем лайков на пост: {current.like_count_sum / current.count}
-- В среднем комментариев на пост: {current.comment_count_sum / current.count}
-- Коэф. вовлеченности: {(current.like_count_sum + current.comment_count_sum) / user.followers_count * 100}%
+- Количество постов: {media_count}
+- В среднем лайков на пост: {media_likes}
+- В среднем комментариев на пост: {media_comments}
+- Коэф. вовлеченности: {media_coeff}%
 
 Статистика изменений от {change.previous_stats_date}
 - Изменение постов: {change.media_count_difference}
@@ -62,7 +62,13 @@ def build_user_info_masked_text(schema: InstagramUserSchema) -> str:
 
 
 def build_user_stats_text(change: InstagramUserStatsSchema, current: InstagramMediaUserStatsSchema, user: InstagramUserSchema) -> str:
-    return _user_stats_text.format(change=change, current=current, user=user)
+    return _user_stats_text.format(
+        media_count=current.count,
+        media_likes=round(current.like_count_sum / current.count, 2),
+        media_comments=round(current.comment_count_sum / current.count, 2),
+        media_coeff=round((current.like_count_sum + current.comment_count_sum) / user.followers_count * 100, 2),
+        change=change
+    )
 
 
 def build_user_followers_text(followers: list[InstagramUserSchema]) -> str:
@@ -71,7 +77,12 @@ def build_user_followers_text(followers: list[InstagramUserSchema]) -> str:
 
 _media_stats_text = """
 {media.caption_text}
-Статистика от {stats.created_at}
+Текущая статистика:
+- Комментариев: {stats.comment_count_current}
+- Лайков: {stats.like_count_current}
+- Просмотров: {stats.play_count_current}
+
+Статистика изменений от {stats.created_at}
 - Комментариев: {stats.comment_count_difference}
 - Лайков: {stats.like_count_difference}
 - Просмотров: {stats.play_count_difference}

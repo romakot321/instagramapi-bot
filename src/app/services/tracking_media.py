@@ -1,5 +1,6 @@
 import datetime as dt
 from typing import Annotated
+from urllib.parse import unquote_plus
 
 from aiogram3_di import Depends
 
@@ -7,7 +8,7 @@ from aiogram import Bot
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram import types
-from aiogram.methods import EditMessageText, TelegramMethod
+from aiogram.methods import DeleteMessage, EditMessageText, TelegramMethod
 
 from app.repositories.instagram import InstagramRepository
 from app.repositories.keyboard import KeyboardRepository
@@ -45,10 +46,10 @@ class TrackingMediaService:
             keyboard_repository=keyboard_repository,
         )
 
-    async def _load_tracking_medias(self, username: str, creator_telegram_id: int, page: int = 0) -> tuple[list[TrackingMedia], int]:
+    async def _load_tracking_medias(self, username: str, creator_telegram_id: int, page: int = 1) -> tuple[list[TrackingMedia], int]:
         """Return list of tracking_media for username and total count of tracking's media"""
         count = 10
-        tracking_medias = await self.tracking_media_repository.list(instagram_username=username, page=page, count=count)
+        tracking_medias = await self.tracking_media_repository.list(instagram_username=username, page=page - 1, count=count)
         if tracking_medias:
             total_count = await self.tracking_media_repository.count(instagram_username=username)
             return tracking_medias, total_count
@@ -67,14 +68,19 @@ class TrackingMediaService:
             max_id = info.next_max_id
         return tracking_medias[page * count:(page + 1) * count], len(tracking_medias)
 
-    async def handle_show_tracking_medias(self, query: CallbackQuery, data: TrackingActionCallback) -> TelegramMethod:
+    async def handle_show_tracking_medias(self, query: CallbackQuery, data: TrackingActionCallback) -> list[TelegramMethod]:
+        methods = []
+        if query.message.document is not None:
+            methods.append(DeleteMessage(chat_id=query.from_user.id, message_id=query.message.message_id))
+
         models, total_count = await self._load_tracking_medias(data.username, query.from_user.id, page=data.page)
         message = TextMessage(
             text="Публикации пользователя @" + data.username,
             reply_markup=self.keyboard_repository.build_tracking_medias_list_keyboard(models, data.page, total_count),
             message_id=query.message.message_id
         )
-        return build_aiogram_method(query.from_user.id, message, use_edit=True)
+        methods.append(build_aiogram_method(query.from_user.id, message, use_edit=not methods))
+        return methods
 
     async def handle_tracking_media_stats(self, query: CallbackQuery, data: TrackingMediaActionCallback) -> TelegramMethod:
         model = await self.tracking_media_repository.get_by_instagram_id(data.instagram_id)
@@ -82,14 +88,14 @@ class TrackingMediaService:
         if model.display_uri:
             message = MediaMessage(
                 caption=build_media_stats_text(info, model),
-                document=model.display_uri,
-                reply_markup=self.keyboard_repository.build_to_show_tracking_media_keyboard(model.instagram_username),
+                document=unquote_plus(model.display_uri),
+                reply_markup=self.keyboard_repository.build_to_show_tracking_media_keyboard(model.instagram_username, page=data.page),
                 message_id=query.message.message_id
             )
         else:
             message = TextMessage(
                 text=build_media_stats_text(info, model),
-                reply_markup=self.keyboard_repository.build_to_show_tracking_media_keyboard(model.instagram_username),
+                reply_markup=self.keyboard_repository.build_to_show_tracking_media_keyboard(model.instagram_username, page=data.page),
                 message_id=query.message.message_id
             )
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
