@@ -45,25 +45,28 @@ class TrackingMediaService:
             keyboard_repository=keyboard_repository,
         )
 
-    async def _load_tracking_medias(self, username: str, creator_telegram_id: int) -> list[TrackingMedia]:
-        tracking_medias = await self.tracking_media_repository.list(instagram_username=username)
+    async def _load_tracking_medias(self, username: str, creator_telegram_id: int, page: int = 0) -> list[TrackingMedia]:
+        count = 10
+        tracking_medias = await self.tracking_media_repository.list(instagram_username=username, page=page, count=count)
         if tracking_medias:
             return tracking_medias
 
-        info = await self.instagram_repository.get_user_media_info(username)
-        for schema in info:
-            model = await self.tracking_media_repository.create(
-                creator_telegram_id=creator_telegram_id,
-                instagram_username=username,
-                caption_text=schema.caption_text,
-                display_uri=schema.display_uri,
-                instagram_id=schema.external_id
-            )
-            tracking_medias.append(model)
-        return tracking_medias
+        max_id = None
+        while not (info := await self.instagram_repository.get_user_media_info(username, max_id=max_id)).last_page:
+            for schema in info.items:
+                model = await self.tracking_media_repository.create(
+                    creator_telegram_id=creator_telegram_id,
+                    instagram_username=username,
+                    caption_text=schema.caption_text,
+                    display_uri=schema.display_uri,
+                    instagram_id=schema.external_id
+                )
+                tracking_medias.append(model)
+            max_id = info.next_max_id
+        return tracking_medias[page * count:(page + 1) * count]
 
     async def handle_show_tracking_medias(self, query: CallbackQuery, data: TrackingActionCallback) -> TelegramMethod:
-        models = await self._load_tracking_medias(data.username, query.from_user.id)
+        models = await self._load_tracking_medias(data.username, query.from_user.id, page=data.page)
         message = TextMessage(
             text="Публикации пользователя @" + data.username,
             reply_markup=self.keyboard_repository.build_tracking_medias_list_keyboard(models),

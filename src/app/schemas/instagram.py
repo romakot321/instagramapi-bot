@@ -30,6 +30,12 @@ class InstagramMediaSchema(BaseModel):
     play_count: int | None = None
 
 
+class InstagramMediaListSchema(BaseModel):
+    items: list[InstagramMediaSchema]
+    last_page: bool
+    next_max_id: str | None = None
+
+
 class InstagramMediaStatsSchema(BaseModel):
     external_id: str
     comment_count_difference: int

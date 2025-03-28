@@ -2,7 +2,7 @@ from aiohttp import ClientSession
 from loguru import logger
 import os
 
-from app.schemas.instagram import InstagramMediaSchema, InstagramMediaStatsSchema, InstagramMediaUserStatsSchema, InstagramUserSchema, InstagramUserStatsSchema
+from app.schemas.instagram import InstagramMediaListSchema, InstagramMediaSchema, InstagramMediaStatsSchema, InstagramMediaUserStatsSchema, InstagramUserSchema, InstagramUserStatsSchema
 
 
 class InstagramRepository:
@@ -29,15 +29,12 @@ class InstagramRepository:
             body = await resp.json()
         return InstagramUserStatsSchema.model_validate(body)
 
-    async def get_user_media_info(self, username: str) -> list[InstagramMediaSchema]:
+    async def get_user_media_info(self, username: str, max_id: str | None = None) -> InstagramMediaListSchema:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/media", params={"username": username})
+            resp = await session.get("/api/media", params={"username": username, "max_id": max_id, "count": 10})
             assert resp.status in (200, 201), await resp.text()
             body = await resp.json()
-        return [
-            InstagramMediaSchema.model_validate(item)
-            for item in body
-        ]
+        return InstagramMediaListSchema.model_validate(body)
 
     async def get_media_stats(self, media_id: str) -> InstagramMediaStatsSchema:
         async with ClientSession(base_url=self.API_URL) as session:
