@@ -15,7 +15,7 @@ class TextMessage(Message):
 
 class MediaMessage(Message):
     caption: str | None = None
-    document: types.BufferedInputFile
+    document: types.BufferedInputFile | str
     reply_markup: types.InlineKeyboardMarkup | None = None
     parse_mode: str | None = None
 

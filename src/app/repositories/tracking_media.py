@@ -38,5 +38,5 @@ class TrackingMediaRepository(BaseRepository):
     async def delete(self, model_id: int):
         await self._delete(model_id)
 
-    async def count(self) -> int:
-        return await self._count()
+    async def count(self, instagram_username: str | None = None) -> int:
+        return await self._count(instagram_username=instagram_username)

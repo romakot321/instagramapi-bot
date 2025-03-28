@@ -1,11 +1,13 @@
 from aiogram import types
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+import math
 import os
 from urllib.parse import urlparse
 
 from app.schemas.action_callback import (
     Action,
     ActionCallback,
+    PaginatedActionCallback,
     TrackingActionCallback,
     TrackingMediaActionCallback,
 )
@@ -27,7 +29,9 @@ class KeyboardRepository:
         builder = InlineKeyboardBuilder()
         builder.button(
             text=Action.subscription_add.text,
-            web_app=types.WebAppInfo(url="https://" + urlparse(BOT_WEBHOOK_URL).netloc + "/paywall")
+            web_app=types.WebAppInfo(
+                url="https://" + urlparse(BOT_WEBHOOK_URL).netloc + "/paywall"
+            ),
         )
         builder.adjust(1)
         return builder.as_markup()
@@ -81,7 +85,9 @@ class KeyboardRepository:
 
     def build_tracking_show_full_keyboard(self) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.button(**Action.subscription_add.model_dump() | {"text": "Показать все данные"})
+        builder.button(
+            **Action.subscription_add.model_dump() | {"text": "Показать все данные"}
+        )
         builder.adjust(1)
         return builder.as_markup()
 
@@ -115,7 +121,10 @@ class KeyboardRepository:
         return builder.as_markup()
 
     def build_tracking_medias_list_keyboard(
-        self, tracking_medias: list[TrackingMedia]
+        self,
+        tracking_medias: list[TrackingMedia],
+        current_page: int,
+        total_media_count: int,
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         for media in tracking_medias:
@@ -126,6 +135,17 @@ class KeyboardRepository:
                     instagram_id=media.instagram_id,
                 ).pack(),
             )
+        builder.add(
+            *self.paginate_row(
+                total_media_count,
+                current_page,
+                TrackingActionCallback(
+                    action=Action.show_tracking_media.action,
+                    username=tracking_medias[0].instagram_username,
+                ),
+            )
+        )
+        builder.button(**Action.main_menu.model_dump())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -141,3 +161,33 @@ class KeyboardRepository:
         )
         builder.adjust(1)
         return builder.as_markup()
+
+    def paginate_row(
+        self,
+        total_count: int,
+        current_page: int,
+        callback_data: PaginatedActionCallback,
+        on_page_count: int = 10,
+    ) -> list[types.InlineKeyboardButton]:
+        buttons = []
+        total_pages = math.ceil(total_count / on_page_count)
+        if current_page > 1:
+            buttons.append(
+                types.InlineKeyboardButton(
+                    text="⬅️",
+                    callback_data=callback_data.replace(page=current_page - 1).pack(),
+                )
+            )
+        buttons.append(
+            types.InlineKeyboardButton(
+                text=f"{current_page} / {total_pages}", callback_data=None
+            )
+        )
+        if current_page < total_pages:
+            buttons.append(
+                types.InlineKeyboardButton(
+                    text="➡️",
+                    callback_data=callback_data.replace(page=current_page - 1).pack(),
+                )
+            )
+        return buttons

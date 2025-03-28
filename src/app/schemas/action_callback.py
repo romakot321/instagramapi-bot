@@ -59,7 +59,7 @@ class PaginatedActionCallback(ActionCallback, prefix='paginated_action'):
     """
     :param page: int OR None, current page
     """
-    page: int = 0
+    page: int = 1
 
 
 class TrackingActionCallback(PaginatedActionCallback, prefix="tracking_action"):
