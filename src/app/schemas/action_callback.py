@@ -18,6 +18,7 @@ class Action(Enum):
     add_tracking = ButtonData(action="add_tracking", text="Добавить профиль")
     show_trackings = ButtonData(action="show_trackings", text="Мои профили")
     subscription_menu = ButtonData(action="subscription_menu", text="Подписка")
+    report_trackings = ButtonData(action="report_trackings", text=None)
 
     tracking_subscribe = ButtonData(action="tracking_subscribe", text="Подписаться")
     tracking_followers = ButtonData(action="tracking_followers", text="Подписчики")

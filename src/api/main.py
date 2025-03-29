@@ -5,10 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic_settings import BaseSettings
 from loguru import logger
-# from fastapi_utils.tasks import repeat_every
+from fastapi_utils.tasks import repeat_every
 from contextlib import asynccontextmanager
 import asyncio
+import datetime as dt
 
+from api.services.user import UserService
+from app.controller import BotController
 from app.main import setup_bot
 
 # from db.admin import attach_admin_panel
@@ -40,8 +43,21 @@ def register_cors(application):
     )
 
 
+@repeat_every(seconds=3600)
+async def send_reports():
+    if dt.datetime.now(tz=dt.UTC).hour != 19:
+        return
+    async with UserService() as user_service:
+        users = await user_service.list(count=10000000)
+    for user in users:
+        await BotController.send_reports(user.telegram_id)
+        await asyncio.sleep(0.3)  # Rate-limit
+
+
 @asynccontextmanager
 async def application_lifespan(app: FastAPI):
+    await send_reports()
+
     bot_events = setup_bot(app)
     if bot_events is not None:
         on_startup, on_shutdown = bot_events

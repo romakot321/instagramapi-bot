@@ -151,3 +151,14 @@ class TrackingService:
         )
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
+    async def handle_report_trackings(self, query: CallbackQuery) -> list[TelegramMethod]:
+        methods = []
+        for tracking in (await self.tracking_repository.list(creator_telegram_id=query.from_user.id)):
+            user_info = await self.instagram_repository.get_user_info(tracking.instagram_username)
+            user_stats = await self.instagram_repository.get_user_stats(tracking.instagram_username)
+            media_stats = await self.instagram_repository.get_media_user_stats(tracking.instagram_username)
+            message = TextMessage(
+                text="Отчет по " + tracking.instagram_username + "\n\n" + build_user_stats_text(user_stats, media_stats, user_info),
+            )
+            methods.append(build_aiogram_method(query.from_user.id, message))
+        return methods

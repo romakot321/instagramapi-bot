@@ -116,3 +116,17 @@ async def tracking_stats(
 ):
     method = await tracking_service.handle_tracking_stats(callback_query, callback_data)
     await bot(method)
+
+
+@router.callback_query(
+    ActionCallback.filter(
+        F.action == Action.report_trackings.action
+    )
+)
+async def report_trackings(
+    callback_query: CallbackQuery,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
+):
+    method = await tracking_service.handle_report_trackings(callback_query)
+    await bot(method)
