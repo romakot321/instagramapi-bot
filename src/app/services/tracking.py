@@ -141,9 +141,11 @@ class TrackingService:
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
     async def handle_tracking_stats(self, query: CallbackQuery, data: TrackingActionCallback) -> TelegramMethod:
-        info = await self.instagram_repository.get_user_stats(data.username)
+        user_info = await self.instagram_repository.get_user_info(data.username)
+        user_stats = await self.instagram_repository.get_user_stats(data.username)
+        media_stats = await self.instagram_repository.get_media_user_stats(data.username)
         message = TextMessage(
-            text=build_user_stats_text(info),
+            text=build_user_stats_text(user_stats, media_stats, user_info),
             reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(data.username),
             message_id=query.message.message_id
         )

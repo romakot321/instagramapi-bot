@@ -38,6 +38,9 @@ class InstagramMediaListSchema(BaseModel):
 
 class InstagramMediaStatsSchema(BaseModel):
     external_id: str
+    comment_count_current: int
+    like_count_current: int
+    play_count_current: int | None = None
     comment_count_difference: int
     like_count_difference: int
     play_count_difference: int | None = None

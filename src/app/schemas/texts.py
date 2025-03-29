@@ -1,6 +1,6 @@
 import re
 
-from app.schemas.instagram import InstagramMediaSchema, InstagramMediaStatsSchema, InstagramUserSchema, InstagramUserStatsSchema
+from app.schemas.instagram import InstagramMediaSchema, InstagramMediaStatsSchema, InstagramMediaUserStatsSchema, InstagramUserSchema, InstagramUserStatsSchema
 from db.tables import Subscription, TrackingMedia
 
 
@@ -38,10 +38,16 @@ _user_info_masked_text = """
 """
 
 _user_stats_text = """
-Статистика от {schema.previous_stats_date}
-Изменение постов: {schema.media_count_difference}
-Изменение подписчиков: {schema.followers_count_difference}
-Изменение подписок: {schema.following_count_difference}
+Текущая статистика:
+- Количество постов: {current.count}
+- В среднем лайков на пост: {current.like_count_sum / current.count}
+- В среднем комментариев на пост: {current.comment_count_sum / current.count}
+- Коэф. вовлеченности: {(current.like_count_sum + current.comment_count_sum) / user.followers_count * 100}%
+
+Статистика изменений от {change.previous_stats_date}
+- Изменение постов: {change.media_count_difference}
+- Изменение подписчиков: {change.followers_count_difference}
+- Изменение подписок: {change.following_count_difference}
 """
 
 _user_follower_text = """{user.full_name} (@{user.username})"""
@@ -55,8 +61,8 @@ def build_user_info_masked_text(schema: InstagramUserSchema) -> str:
     return _user_info_masked_text.format(schema=schema)
 
 
-def build_user_stats_text(schema: InstagramUserStatsSchema) -> str:
-    return _user_stats_text.format(schema=schema)
+def build_user_stats_text(change: InstagramUserStatsSchema, current: InstagramMediaUserStatsSchema, user: InstagramUserSchema) -> str:
+    return _user_stats_text.format(change=change, current=current, user=user)
 
 
 def build_user_followers_text(followers: list[InstagramUserSchema]) -> str:
