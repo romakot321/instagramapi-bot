@@ -55,7 +55,7 @@ class TrackingService:
         url = urlparse(user_input)
         if url.netloc == '':
             return user_input
-        elif url.netloc != "instagram.com":
+        elif url.netloc != "instagram.com" and url.netloc != "www.instagram.com":
             return None
         return url.path.strip("/")
 
