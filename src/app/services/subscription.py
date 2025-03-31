@@ -72,13 +72,13 @@ class SubscriptionService:
             return await self._handle_new_subscription(query)
         return await self._handle_subscription_menu_show(query, subscriptions)
 
-    async def handle_subscription_add(self, query: CallbackQuery) -> TelegramMethod:
+    async def handle_subscription_add(self, tg_object: CallbackQuery | Message) -> TelegramMethod:
         message = TextMessage(
             text=subscription_paywall_text,
             reply_markup=self.keyboard_repository.build_paywall_keyboard(),
-            message_id=query.message.message_id,
+            message_id=tg_object.message.message_id if isinstance(tg_object, CallbackQuery) else None,
         )
-        return build_aiogram_method(query.from_user.id, message, use_edit=True)
+        return build_aiogram_method(tg_object.from_user.id, message, use_edit=isinstance(tg_object, CallbackQuery))
 
     async def handle_subscription_add_created(
         self, query: CallbackQuery, data: SubscriptionActionCallback

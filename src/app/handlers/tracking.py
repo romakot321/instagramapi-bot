@@ -17,18 +17,16 @@ from app.services.tracking import TrackingService
 router = Router(name=__name__)
 
 
-@router.callback_query(
-    ActionCallback.filter(
-        F.action == Action.add_tracking.action
-    )
+@router.message(
+    F.text == Action.add_tracking.text
 )
 async def add_tracking(
-    callback_query: CallbackQuery,
+    message: Message,
     state: FSMContext,
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
-    method = await tracking_service.handle_form_create(callback_query, state)
+    method = await tracking_service.handle_form_create(message, state)
     await bot(method)
 
 
@@ -41,8 +39,12 @@ async def tracking_create(
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
+    previous_message: Message | None = None
     async for method in tracking_service.handle_create(message, state):
-        await bot(method)
+        msg = await bot(method)
+        if previous_message is not None:
+            await bot.delete_message(previous_message.chat.id, previous_message.message_id)
+        previous_message = msg
 
 
 @router.callback_query(
@@ -50,12 +52,24 @@ async def tracking_create(
         F.action == Action.show_trackings.action
     )
 )
-async def show_trackings(
+async def show_trackings_query(
     callback_query: CallbackQuery,
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
     method = await tracking_service.handle_show_trackings(callback_query)
+    await bot(method)
+
+
+@router.message(
+    F.text == Action.show_trackings.text
+)
+async def show_trackings_message(
+    message: Message,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
+):
+    method = await tracking_service.handle_show_trackings(message)
     await bot(method)
 
 

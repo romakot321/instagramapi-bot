@@ -1,3 +1,4 @@
+from os import wait
 import types
 from typing import Annotated, AsyncGenerator, Generator
 from urllib.parse import urlparse
@@ -59,10 +60,10 @@ class TrackingService:
             return None
         return url.path.strip("/")
 
-    async def handle_form_create(self, query: CallbackQuery, fsm_context: FSMContext) -> TelegramMethod:
+    async def handle_form_create(self, msg: Message, fsm_context: FSMContext) -> TelegramMethod:
         await fsm_context.set_state(TrackingCreateForm.typing_username)
-        message = TextMessage(text="Введите ссылку или имя пользователя", message_id=query.message.message_id)
-        return build_aiogram_method(query.from_user.id, message, use_edit=True)
+        message = TextMessage(text="Введите ссылку или имя пользователя")
+        return build_aiogram_method(msg.from_user.id, message)
 
     async def handle_create(self, msg: Message, fsm_context: FSMContext) -> AsyncGenerator[TelegramMethod]:
         username = self._extract_username(msg.text)
@@ -71,7 +72,7 @@ class TrackingService:
             return
 
         await fsm_context.clear()
-        message = TextMessage(text="Загружаем данные...")
+        message = TextMessage(text="Загружаем данные... Если аккаунт добавлен впервые - придется подождать, пока мы соберем все данные")
         yield build_aiogram_method(msg.from_user.id, message)
 
         info = await self.instagram_repository.get_user_info(username)
@@ -98,14 +99,23 @@ class TrackingService:
             )
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
-    async def handle_show_trackings(self, query: CallbackQuery) -> TelegramMethod:
-        trackings = await self.tracking_repository.list(creator_telegram_id=query.from_user.id)
+    async def handle_tracking_unsubscribe(self, query: CallbackQuery, data: TrackingActionCallback) -> TelegramMethod:
+        await self.tracking_repository.delete(query.from_user.id, data.username)
+        message = TextMessage(
+            text="Вы успешно отписались от пользователя @" + data.username,
+            reply_markup=self.keyboard_repository.build_to_trackings_list_keyboard(),
+            message_id=query.message.message_id
+        )
+        return build_aiogram_method(query.from_user.id, message)
+
+    async def handle_show_trackings(self, tg_object: CallbackQuery | Message) -> TelegramMethod:
+        trackings = await self.tracking_repository.list(creator_telegram_id=tg_object.from_user.id)
         message = TextMessage(
             text="Ваши отслеживания",
             reply_markup=self.keyboard_repository.build_trackings_list_keyboard(trackings),
-            message_id=query.message.message_id
+            message_id=tg_object.message.message_id if isinstance(tg_object, CallbackQuery) else None
         )
-        return build_aiogram_method(query.from_user.id, message, use_edit=True)
+        return build_aiogram_method(tg_object.from_user.id, message, use_edit=isinstance(tg_object, CallbackQuery))
 
     async def handle_show(self, query: CallbackQuery, data: TrackingActionCallback) -> TelegramMethod:
         if not (await self.subscription_repository.get_by_telegram_id(query.from_user.id, active=True)):

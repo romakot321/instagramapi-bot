@@ -34,8 +34,8 @@ class TrackingRepository[Table: Tracking, int](BaseRepository):
     async def update(self, model_id: int, **fields) -> Tracking:
         return await self._update(model_id, **fields)
 
-    async def delete(self, model_id: int):
-        await self._delete(model_id)
+    async def delete(self, creator_telegram_id: int, instagram_username: str):
+        await self._delete(dict(creator_telegram_id=creator_telegram_id, instagram_username=instagram_username))
 
     async def count(self, creator_telegram_id: int | None = None) -> int:
         return await self._count(creator_telegram_id=creator_telegram_id)

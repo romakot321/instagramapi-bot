@@ -9,14 +9,14 @@ class Message(BaseModel):
 
 class TextMessage(Message):
     text: str
-    reply_markup: types.InlineKeyboardMarkup | None = None
+    reply_markup: types.InlineKeyboardMarkup | types.ReplyKeyboardMarkup | None = None
     parse_mode: str | None = None
 
 
 class MediaMessage(Message):
     caption: str | None = None
     document: types.BufferedInputFile | str
-    reply_markup: types.InlineKeyboardMarkup | None = None
+    reply_markup: types.InlineKeyboardMarkup | types.ReplyKeyboardMarkup | None = None
     parse_mode: str | None = None
 
     @computed_field
@@ -29,7 +29,7 @@ class MediaGroupMessage(Message):
     caption: str | None = None
     files_: list[bytes] = Field(validation_alias='files')
     parse_mode: str | None = None
-    reply_markup: types.InlineKeyboardMarkup | None = None
+    reply_markup: types.InlineKeyboardMarkup | types.ReplyKeyboardMarkup | None = None
 
     @computed_field
     @property
