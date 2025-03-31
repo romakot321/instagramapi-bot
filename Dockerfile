@@ -77,12 +77,8 @@ ENV PATH=/app/bin:$PATH \
 COPY docker-entrypoint.sh /
 
 COPY --link --chown=$user_id:$group_id --from=build /app/ /app
+COPY --link ./templates /app/templates
+COPY --link ./static /app/static
 
 USER $user_id:$group_id
 WORKDIR /app
-
-RUN <<EOF
-python --version
-python -I -m site
-python -I -c 'import app'
-EOF

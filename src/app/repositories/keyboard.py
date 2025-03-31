@@ -23,7 +23,9 @@ class KeyboardRepository:
         builder.button(**Action.show_trackings.model_dump())
         builder.button(**Action.subscription_menu.model_dump())
         builder.adjust(1)
-        return builder.as_markup()
+        markup = builder.as_markup()
+        markup.resize_keyboard = True
+        return markup
 
     def build_paywall_keyboard(self) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
@@ -39,14 +41,12 @@ class KeyboardRepository:
     def build_to_paywall_keyboard(self) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(**Action.subscription_add.model_dump())
-        builder.button(**Action.main_menu.model_dump())
         builder.adjust(1)
         return builder.as_markup()
 
     def build_subscription_menu_keyboard(self) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(**Action.subscription_cancel.model_dump())
-        builder.button(**Action.main_menu.model_dump())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -110,7 +110,6 @@ class KeyboardRepository:
                     username=tracking.instagram_username,
                 ).pack(),
             )
-        builder.button(**Action.main_menu.model_dump())
         builder.adjust(1)
         return builder.as_markup()
 
