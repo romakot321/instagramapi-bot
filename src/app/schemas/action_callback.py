@@ -15,12 +15,13 @@ class ButtonData(BaseModel):
 
 class Action(Enum):
     main_menu = ButtonData(action="main_menu", text="В меню")
-    add_tracking = ButtonData(action="add_tracking", text="Добавить профиль")
-    show_trackings = ButtonData(action="show_trackings", text="Мои профили")
+    add_tracking = ButtonData(action="add_tracking", text="Добавить отслеживание")
+    show_trackings = ButtonData(action="show_trackings", text="Мои отслеживания")
     subscription_menu = ButtonData(action="subscription_menu", text="Подписка")
     report_trackings = ButtonData(action="report_trackings", text=None)
 
     tracking_subscribe = ButtonData(action="tracking_subscribe", text="Подписаться")
+    tracking_unsubscribe = ButtonData(action="tracking_subscribe", text="Отписаться")
     tracking_followers = ButtonData(action="tracking_followers", text="Подписчики")
     tracking_stats = ButtonData(action="tracking_stats", text="Статистика")
     tracking_show = ButtonData(action="tracking_show", text=None)

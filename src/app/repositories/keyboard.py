@@ -17,8 +17,8 @@ BOT_WEBHOOK_URL = os.getenv("BOT_WEBHOOK_URL", "")
 
 
 class KeyboardRepository:
-    def build_main_keyboard(self) -> types.InlineKeyboardMarkup:
-        builder = InlineKeyboardBuilder()
+    def build_main_keyboard(self) -> types.ReplyKeyboardMarkup:
+        builder = ReplyKeyboardBuilder()
         builder.button(**Action.add_tracking.model_dump())
         builder.button(**Action.show_trackings.model_dump())
         builder.button(**Action.subscription_menu.model_dump())
@@ -54,7 +54,14 @@ class KeyboardRepository:
         self, username: str, subscribed: bool
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        if not subscribed:
+        if subscribed:
+            builder.button(
+                text=Action.tracking_unsubscribe.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_unsubscribe.action, username=username
+                ).pack(),
+            )
+        else:
             builder.button(
                 text=Action.tracking_subscribe.text,
                 callback_data=TrackingActionCallback(
@@ -129,7 +136,7 @@ class KeyboardRepository:
         builder = InlineKeyboardBuilder()
         for media in tracking_medias:
             builder.row(types.InlineKeyboardButton(
-                text=media.created_at.isoformat(sep=" ", timespec="minutes"),
+                text=media.created_at.strftime("%d.%m.%Y %H:%M"),
                 callback_data=TrackingMediaActionCallback(
                     action=Action.tracking_media_stats.action,
                     instagram_id=media.instagram_id,
@@ -165,6 +172,12 @@ class KeyboardRepository:
                 action=Action.show_tracking_media.action, username=tracking_username, page=page
             ).pack(),
         )
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def build_to_trackings_list_keyboard(self) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(**Action.show_trackings.model_dump())
         builder.adjust(1)
         return builder.as_markup()
 

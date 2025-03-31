@@ -62,7 +62,8 @@ class TrackingMediaService:
                     instagram_username=username,
                     caption_text=schema.caption_text,
                     display_uri=schema.display_uri,
-                    instagram_id=schema.external_id
+                    instagram_id=schema.external_id,
+                    created_at=schema.created_at
                 )
                 tracking_medias.append(model)
             max_id = info.next_max_id

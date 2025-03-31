@@ -15,12 +15,24 @@ router = Router(name=__name__)
 @router.callback_query(
     ActionCallback.filter(F.action == Action.subscription_menu.action)
 )
-async def subscription_menu(
+async def subscription_menu_query(
     query: CallbackQuery,
     bot: Bot,
     subscription_service: Annotated[SubscriptionService, Depends(SubscriptionService.init)],
 ):
     method = await subscription_service.handle_subscription_menu(query)
+    await bot(method)
+
+
+@router.message(
+    F.text == Action.subscription_menu.text
+)
+async def subscription_menu_message(
+    message: Message,
+    bot: Bot,
+    subscription_service: Annotated[SubscriptionService, Depends(SubscriptionService.init)],
+):
+    method = await subscription_service.handle_subscription_menu(message)
     await bot(method)
 
 

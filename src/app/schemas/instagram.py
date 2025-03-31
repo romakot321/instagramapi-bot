@@ -22,7 +22,7 @@ class InstagramUserStatsSchema(BaseModel):
 class InstagramMediaSchema(BaseModel):
     external_id: str
     caption_text: str | None = None
-    created_at: dt.datetime | None = None
+    created_at: dt.datetime
     display_uri: str | None = None
 
     comment_count: int
