@@ -55,12 +55,12 @@ _user_stats_text = """
 - Количество постов: {media_count}
 - В среднем лайков на пост: {media_likes}
 - В среднем комментариев на пост: {media_comments}
+- Коэф. вовлеченности: {media_coeff}%
 
 Статистика изменений от {change.previous_stats_date:%d.%m.%Y %H:%M}
 - Изменение постов: {change.media_count_difference}
 - Изменение подписчиков: {change.followers_count_difference}
 - Изменение подписок: {change.following_count_difference}
-- Коэф. вовлеченности: {media_coeff}%
 """
 
 _user_follower_text = """{user.full_name} (@{user.username})"""
@@ -79,7 +79,7 @@ def build_user_stats_text(change: InstagramUserStatsSchema, current: InstagramMe
         media_count=current.count,
         media_likes=round(current.like_count_sum / current.count, 2),
         media_comments=round(current.comment_count_sum / current.count, 2),
-        media_coeff=round((change.like_count_difference + current.comment_count_difference) / user.followers_count * 100, 2),
+        media_coeff=round((current.like_count_sum + current.comment_count_sum) / user.followers_count * 100, 2),
         change=change
     )
 
