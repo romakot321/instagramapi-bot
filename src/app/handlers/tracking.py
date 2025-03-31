@@ -1,4 +1,5 @@
 from typing import Annotated
+from loguru import logger
 
 from aiogram import F
 from aiogram import Router
@@ -128,5 +129,7 @@ async def report_trackings(
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
-    method = await tracking_service.handle_report_trackings(callback_query)
-    await bot(method)
+    logger.debug("Sending reports to " + str(callback_query.from_user.id))
+    methods = await tracking_service.handle_report_trackings(callback_query)
+    for method in methods:
+        await bot(method)

@@ -50,5 +50,5 @@ class InstagramMediaStatsSchema(BaseModel):
 class InstagramMediaUserStatsSchema(BaseModel):
     like_count_sum: int
     comment_count_sum: int
-    play_count_sum: int
+    play_count_sum: int | None = None
     count: int
