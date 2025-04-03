@@ -15,19 +15,25 @@ class ButtonData(BaseModel):
 
 class Action(Enum):
     main_menu = ButtonData(action="main_menu", text="В меню")
+    delete_message = ButtonData(action="delete_message", text="Закрыть")
+
     add_tracking = ButtonData(action="add_tracking", text="Добавить отслеживание")
     show_trackings = ButtonData(action="show_trackings", text="Мои отслеживания")
     subscription_menu = ButtonData(action="subscription_menu", text="Подписка")
     report_trackings = ButtonData(action="report_trackings", text=None)
 
     tracking_subscribe = ButtonData(action="tracking_subscribe", text="Подписаться")
-    tracking_unsubscribe = ButtonData(action="tracking_subscribe", text="Отписаться")
+    tracking_unsubscribe = ButtonData(action="tracking_unsubscribe", text="Отписаться")
     tracking_followers = ButtonData(action="tracking_followers", text="Подписчики")
-    tracking_stats = ButtonData(action="tracking_stats", text="Статистика")
+    tracking_new_subscribes = ButtonData(action="tracking_new_subscribes", text="🧑‍💻 Посмотреть подписавшихся")
+    tracking_new_unsubscribes = ButtonData(action="tracking_new_unsubscribes", text="⭐ Посмотреть отписавшихся")
+    tracking_top_followers = ButtonData(action="tracking_top_followers", text="Самые активные подписчики")
+    tracking_stats = ButtonData(action="tracking_stats", text="📊Посмотреть полную статистику пользователя")
     tracking_show = ButtonData(action="tracking_show", text=None)
     show_tracking_media = ButtonData(action="media", text="Публикации")
 
     tracking_media_stats = ButtonData(action="media_stats", text="Статистика")
+    tracking_media_display = ButtonData(action="media_display", text="Посмотреть")
 
     subscription_add = ButtonData(action="subscription_add", text="Приобрести подписку")
     subscription_cancel = ButtonData(action="subscription_cancel", text="Отменить подписку")

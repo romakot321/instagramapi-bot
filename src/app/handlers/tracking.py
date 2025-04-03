@@ -120,21 +120,6 @@ async def tracking_unsubscribe(
 
 @router.callback_query(
     TrackingActionCallback.filter(
-        F.action == Action.tracking_followers.action
-    )
-)
-async def tracking_followers(
-    callback_query: CallbackQuery,
-    callback_data: TrackingActionCallback,
-    bot: Bot,
-    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
-):
-    method = await tracking_service.handle_tracking_followers(callback_query, callback_data)
-    await bot(method)
-
-
-@router.callback_query(
-    TrackingActionCallback.filter(
         F.action == Action.tracking_stats.action
     )
 )

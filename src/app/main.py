@@ -154,5 +154,10 @@ async def run_polling():
     await dispatcher.start_infinity_polling(bot)
 
 
-if __name__ == '__main__':
-    asyncio.run(run_polling())
+def run_migrations():
+    import alembic.config
+    alembicArgs = [
+        '--raiseerr',
+        'upgrade', 'head',
+    ]
+    alembic.config.main(argv=alembicArgs)

@@ -52,3 +52,10 @@ class InstagramMediaUserStatsSchema(BaseModel):
     comment_count_sum: int
     play_count_sum: int | None = None
     count: int
+
+
+class InstagramUserFollowersDifferenceSchema(BaseModel):
+    username: str
+    subscribes_usernames: list[str]
+    unsubscribes_usernames: list[str]
+    created_at: dt.datetime

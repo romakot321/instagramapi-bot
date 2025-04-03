@@ -47,13 +47,12 @@ class Tracking(BaseMixin, Base):
 class TrackingMedia(BaseMixin, Base):
     __tablename__ = "tracking_medias"
 
-    creator_telegram_id: M[int] = column(ForeignKey("users.telegram_id", ondelete="CASCADE"))
     instagram_username: M[str] = column(index=True)
     instagram_id: M[str]
+    like_count: M[int]
+    comment_count: M[int]
     caption_text: M[str | None]
     display_uri: M[str | None]
 
-    creator: M['User'] = relationship(back_populates="trackings_medias", lazy="selectin")
-
-    __table_args__ = (UniqueConstraint("creator_telegram_id", "instagram_username", "instagram_id", name="tracking_media_uq"),)
+    __table_args__ = (UniqueConstraint("instagram_username", "instagram_id", name="tracking_media_uq"),)
 

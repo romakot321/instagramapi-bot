@@ -30,3 +30,8 @@ async def main_menu(
 ):
     method = await user_service.handle_user_start(callback_query)
     await bot(method)
+
+
+@router.callback_query(ActionCallback.filter(F.action == Action.delete_message.action))
+async def delete_message(callback_query: CallbackQuery, bot: Bot):
+    await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)

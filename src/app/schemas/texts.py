@@ -1,6 +1,12 @@
 import re
 
-from app.schemas.instagram import InstagramMediaSchema, InstagramMediaStatsSchema, InstagramMediaUserStatsSchema, InstagramUserSchema, InstagramUserStatsSchema
+from app.schemas.instagram import (
+    InstagramMediaSchema,
+    InstagramMediaStatsSchema,
+    InstagramMediaUserStatsSchema,
+    InstagramUserSchema,
+    InstagramUserStatsSchema,
+)
 from db.tables import Subscription, TrackingMedia
 
 
@@ -32,15 +38,17 @@ __Готов начать?__
 start_text = escape_markdown(_start_text)
 
 
-_user_info_text = """
-Никнейм: {schema.username}
-Имя: {schema.full_name}
-Постов: {schema.media_count}
-Подписчиков: {schema.followers_count}
-Подписок: {schema.following_count}
+_tracking_info_text = """
+📱  Никнейм: {schema.username}
+🔗  Ссылка на аккаунт: instagram.com/{schema.username}
+📛  Имя: {schema.full_name}
+🧑‍💻  Подписчиков: {schema.followers_count}
+⭐️  Подписок: {schema.following_count}
+🖼  Постов: {schema.media_count}
+ℹ️  Описание: TODO
 """
 
-_user_info_masked_text = """
+_tracking_info_masked_text = """
 Никнейм: {schema.username}
 Имя: {schema.full_name}
 Постов: ###
@@ -50,42 +58,86 @@ _user_info_masked_text = """
 Некоторые данные и статистика скрыты
 """
 
-_user_stats_text = """
-Текущая статистика:
-- Количество постов: {media_count}
-- В среднем лайков на пост: {media_likes}
-- В среднем комментариев на пост: {media_comments}
-- Коэф. вовлеченности: {media_coeff}%
+_tracking_stats_text = """
+📊 **Текущая статистика**:
+🖼 Количество постов: {media_count}
+👍 В среднем лайков на пост: {media_likes}
+⌨️ В среднем комментариев на пост: {media_comments}
+🤔 Коэф. вовлеченности: {media_coeff}%
 
-Статистика изменений от {change.previous_stats_date:%d.%m.%Y %H:%M}
-- Изменение постов: {change.media_count_difference}
-- Изменение подписчиков: {change.followers_count_difference}
-- Изменение подписок: {change.following_count_difference}
+📊 **Статистика изменений от {change.previous_stats_date:%d.%m.%Y %H:%M}**
+🖼 Изменение постов: {change.media_count_difference}
+🧑‍💻 Изменение подписчиков: 🔽 {change.followers_count_difference}
+⭐️ Изменение подписок: 🔽 {change.following_count_difference}
 """
 
-_user_follower_text = """{user.full_name} (@{user.username})"""
+_tracking_follower_text = """instagram.com/{tracking.username}"""
+
+_tracking_report_text = """
+Отчет по пользователю: @{tracking.username}
+
+Ссылка на аккаунт: https://www.instagram.com/{tracking.username}
+
+📊 Статистика от 31.03.2025 17:47
+
+🖼 Количество постов: 🔼{media_count} ({change.media_count_difference})
+🧑‍💻 Количество подписчиков: 🔽{tracking.followers_count} ({change.followers_count_difference})
+⭐️ Количество подписок: 🔼{tracking.following_count} ({change.following_count_difference})
+"""
 
 
-def build_user_info_text(schema: InstagramUserSchema) -> str:
-    return _user_info_text.format(schema=schema)
+def build_tracking_info_text(schema: InstagramUserSchema) -> str:
+    return _tracking_info_text.format(schema=schema)
 
 
-def build_user_info_masked_text(schema: InstagramUserSchema) -> str:
-    return _user_info_masked_text.format(schema=schema)
+def build_tracking_info_masked_text(schema: InstagramUserSchema) -> str:
+    return _tracking_info_masked_text.format(schema=schema)
 
 
-def build_user_stats_text(change: InstagramUserStatsSchema, current: InstagramMediaUserStatsSchema, user: InstagramUserSchema) -> str:
-    return _user_stats_text.format(
+def build_tracking_stats_text(
+    change: InstagramUserStatsSchema,
+    current: InstagramMediaUserStatsSchema,
+    tracking: InstagramUserSchema,
+) -> str:
+    text = _tracking_stats_text.format(
         media_count=current.count,
         media_likes=round(current.like_count_sum / current.count, 2),
         media_comments=round(current.comment_count_sum / current.count, 2),
-        media_coeff=round((current.like_count_sum + current.comment_count_sum) / user.followers_count * 100, 2),
-        change=change
+        media_coeff=round(
+            (current.like_count_sum + current.comment_count_sum)
+            / tracking.followers_count
+            * 100,
+            2,
+        ),
+        change=change,
+    )
+    return escape_markdown(text)
+
+
+def build_tracking_followers_text(followers: list[str]) -> str:
+    return "\n".join(
+        _tracking_follower_text.format(tracking=tracking) for tracking in followers
     )
 
 
-def build_user_followers_text(followers: list[InstagramUserSchema]) -> str:
-    return "\n".join(_user_follower_text.format(user=user) for user in followers)
+def build_tracking_report_text(
+    change: InstagramUserStatsSchema,
+    current: InstagramMediaUserStatsSchema,
+    tracking: InstagramUserSchema,
+) -> str:
+    return _tracking_report_text.format(
+        media_count=current.count,
+        media_likes=round(current.like_count_sum / current.count, 2),
+        media_comments=round(current.comment_count_sum / current.count, 2),
+        media_coeff=round(
+            (current.like_count_sum + current.comment_count_sum)
+            / tracking.followers_count
+            * 100,
+            2,
+        ),
+        change=change,
+        tracking=tracking,
+    )
 
 
 _media_stats_text = """
@@ -102,7 +154,9 @@ _media_stats_text = """
 """
 
 
-def build_media_stats_text(stats: InstagramMediaStatsSchema, media: TrackingMedia) -> str:
+def build_media_stats_text(
+    stats: InstagramMediaStatsSchema, media: TrackingMedia
+) -> str:
     return _media_stats_text.format(media=media, stats=stats)
 
 
