@@ -49,9 +49,8 @@ class SubscriptionService:
         message = TextMessage(
             text="У вас нет активной подписки",
             reply_markup=self.keyboard_repository.build_to_paywall_keyboard(),
-            message_id=query.message.message_id,
         )
-        return build_aiogram_method(query.from_user.id, message, use_edit=True)
+        return build_aiogram_method(query.from_user.id, message)
 
     async def _handle_subscription_menu_show(
         self, query: CallbackQuery, subscriptions: list[Subscription]
@@ -60,9 +59,8 @@ class SubscriptionService:
         message = TextMessage(
             text=build_subscription_info_text(newest_subscription),
             reply_markup=self.keyboard_repository.build_subscription_menu_keyboard(),
-            message_id=query.message.message_id,
         )
-        return build_aiogram_method(query.from_user.id, message, use_edit=True)
+        return build_aiogram_method(query.from_user.id, message)
 
     async def handle_subscription_menu(self, query: CallbackQuery) -> TelegramMethod:
         subscriptions = await self.subscription_repository.get_by_telegram_id(

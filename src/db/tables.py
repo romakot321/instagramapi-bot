@@ -49,8 +49,8 @@ class TrackingMedia(BaseMixin, Base):
 
     instagram_username: M[str] = column(index=True)
     instagram_id: M[str]
-    like_count: M[int]
-    comment_count: M[int]
+    like_count: M[int | None]
+    comment_count: M[int | None]
     caption_text: M[str | None]
     display_uri: M[str | None]
 
