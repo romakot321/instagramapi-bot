@@ -178,7 +178,7 @@ class KeyboardRepository:
         for media in tracking_medias:
             builder.row(
                 types.InlineKeyboardButton(
-                    text=media.created_at.strftime("%d.%m.%Y %H:%M") + f"{media.like_count} ❤️ {media.comment_count} 💬",
+                    text=media.created_at.strftime("%d.%m.%Y %H:%M") + f"  {media.like_count} ❤️ {media.comment_count} 💬",
                     callback_data=TrackingMediaActionCallback(
                         action=Action.tracking_media_stats.action,
                         instagram_id=media.instagram_id,

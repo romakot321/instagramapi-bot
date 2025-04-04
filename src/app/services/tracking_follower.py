@@ -94,7 +94,7 @@ class TrackingFollowerService:
                 data.username, len(subscribes_usernames), data.page, on_page_count=10
             ),
         )
-        return build_aiogram_method(query.from_user.id, message)
+        return build_aiogram_method(query.from_user.id, message, use_edit='статистика' not in query.message.text.lower())
 
     async def handle_tracking_new_unsubscribes(
         self, query: CallbackQuery, data: TrackingActionCallback
@@ -122,4 +122,4 @@ class TrackingFollowerService:
                 data.username, len(unsubscribes_usernames), data.page, on_page_count=10
             ),
         )
-        return build_aiogram_method(query.from_user.id, message)
+        return build_aiogram_method(query.from_user.id, message, use_edit='статистика' not in query.message.text.lower())
