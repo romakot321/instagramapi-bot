@@ -125,7 +125,7 @@ class TrackingService:
                 instagram_username=data.username, creator_telegram_id=query.from_user.id
             )
             message = TextMessage(
-                text="Вы успешно подписались на пользователя @" + data.username,
+                text="Вы успешно подписались на пользователя @" + data.username + ". Нашим модераторам необходимо проверить заявку, до тех пор об аккаунте будут собраны неполные данные",
                 reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
                     data.username
                 ),
