@@ -36,7 +36,6 @@ class User(BaseMixin, Base):
     referral_id: M[str | None] = column(ForeignKey("referrals.id", ondelete="SET NULL"))
 
     trackings: M[list['Tracking']] = relationship(back_populates="creator", lazy="noload")
-    trackings_medias: M[list['TrackingMedia']] = relationship(back_populates="creator", lazy="noload")
     subscriptions: M[list['Subscription']] = relationship(back_populates="user", lazy="noload", cascade="delete")
     referral: M["Referral"] = relationship(back_populates="users", lazy="selectin")
     flow_variants: M[list["FlowVariant"]] = relationship(secondary="flowvariant_user_association", lazy="selectin", back_populates="users", cascade="delete")
