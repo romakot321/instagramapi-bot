@@ -22,14 +22,14 @@ class Action(Enum):
     subscription_menu = ButtonData(action="subscription_menu", text="Подписка")
     report_trackings = ButtonData(action="report_trackings", text=None)
 
-    tracking_subscribe = ButtonData(action="tracking_subscribe", text="Подписаться")
-    tracking_unsubscribe = ButtonData(action="tracking_unsubscribe", text="Отписаться")
-    tracking_followers = ButtonData(action="tracking_followers", text="Подписчики")
-    tracking_new_subscribes = ButtonData(action="tracking_new_subscribes", text="🧑‍💻 Посмотреть подписавшихся")
-    tracking_new_unsubscribes = ButtonData(action="tracking_new_unsubscribes", text="⭐ Посмотреть отписавшихся")
-    tracking_top_followers = ButtonData(action="tracking_top_followers", text="Самые активные подписчики")
-    tracking_stats = ButtonData(action="tracking_stats", text="📊Посмотреть полную статистику пользователя")
-    tracking_show = ButtonData(action="tracking_show", text=None)
+    tracking_subscribe = ButtonData(action="t_subscribe", text="Подписаться")
+    tracking_unsubscribe = ButtonData(action="t_unsubscribe", text="Отписаться")
+    tracking_followers = ButtonData(action="t_followers", text="Подписчики")
+    tracking_new_subscribes = ButtonData(action="t_new_subs", text="🧑‍💻 Посмотреть подписавшихся")
+    tracking_new_unsubscribes = ButtonData(action="t_new_unsubs", text="⭐ Посмотреть отписавшихся")
+    tracking_top_followers = ButtonData(action="t_top_folws", text="Самые активные подписчики")
+    tracking_stats = ButtonData(action="t_stats", text="📊Посмотреть полную статистику пользователя")
+    tracking_show = ButtonData(action="t_show", text=None)
     show_tracking_media = ButtonData(action="media", text="Публикации")
 
     tracking_media_stats = ButtonData(action="media_stats", text="Статистика")
@@ -70,7 +70,7 @@ class PaginatedActionCallback(ActionCallback, prefix='paginated_action'):
     page: int = 1
 
 
-class TrackingActionCallback(PaginatedActionCallback, prefix="tracking_action"):
+class TrackingActionCallback(PaginatedActionCallback, prefix="t_action"):
     username: str
 
 

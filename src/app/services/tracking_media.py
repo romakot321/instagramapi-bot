@@ -1,4 +1,5 @@
 import datetime as dt
+from loguru import logger
 from typing import Annotated
 from urllib.parse import unquote_plus
 
@@ -104,7 +105,7 @@ class TrackingMediaService:
             return tracking_medias[page * count:(page + 1) * count], len(tracking_medias)
 
         newest_media = list(sorted(tracking_medias, reverse=True, key=lambda m: m.updated_at or dt.date(year=1970, month=1, day=1)))[0]
-        if (dt.datetime.now() - newest_media.updated_at).total_seconds >= 12 * 3600:
+        if (dt.datetime.now() - newest_media.updated_at).total_seconds() >= 12 * 3600:
             tracking_medias = await self._update_tracking_medias(username)
             return tracking_medias[page * count:(page + 1) * count], len(tracking_medias)
 
@@ -118,7 +119,7 @@ class TrackingMediaService:
             reply_markup=self.keyboard_repository.build_tracking_medias_list_keyboard(models, data.page, total_count),
             message_id=query.message.message_id
         )
-        return build_aiogram_method(query.from_user.id, message)
+        return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
     async def handle_tracking_media_display(self, query: CallbackQuery, data: TrackingMediaActionCallback) -> TelegramMethod:
         info = await self.instagram_repository.get_media_info(data.instagram_id)
@@ -139,14 +140,15 @@ class TrackingMediaService:
 
     async def handle_tracking_media_stats(self, query: CallbackQuery, data: TrackingMediaActionCallback) -> list[TelegramMethod]:
         methods = []
-        if query.message.document is not None:
+        logger.debug(query.message.__dict__)
+        if query.message.document is not None or query.message.photo is not None or query.message.video is not None:
             methods.append(DeleteMessage(chat_id=query.from_user.id, message_id=query.message.message_id))
 
         model = await self.tracking_media_repository.get_by_instagram_id(data.instagram_id)
         info = await self.instagram_repository.get_media_stats(data.instagram_id)
         message = TextMessage(
             text=build_media_stats_text(info, model),
-            reply_markup=self.keyboard_repository.build_to_show_tracking_media_keyboard(model.instagram_username, page=data.page),
+            reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
             message_id=query.message.message_id
         )
         methods.append(build_aiogram_method(query.from_user.id, message, use_edit=not methods))

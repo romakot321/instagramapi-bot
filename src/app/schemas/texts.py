@@ -71,7 +71,7 @@ _tracking_stats_text = """
 ⭐️ Изменение подписок: 🔽 {change.following_count_difference}
 """
 
-_tracking_follower_text = """instagram.com/{tracking.username}"""
+_tracking_follower_text = """instagram.com/{tracking}"""
 
 _tracking_report_text = """
 Отчет по пользователю: @{tracking.username}
