@@ -233,15 +233,27 @@ class KeyboardRepository:
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
-            text=Action.tracking_new_subscribes.text,
+            text=Action.tracking_new_subscribers.text,
             callback_data=TrackingActionCallback(
-                action=Action.tracking_new_subscribes.action, username=username
+                action=Action.tracking_new_subscribers.action, username=username
             ).pack(),
         )
         builder.button(
-            text=Action.tracking_new_unsubscribes.text,
+            text=Action.tracking_new_unsubscribed.text,
             callback_data=TrackingActionCallback(
-                action=Action.tracking_new_unsubscribes.action, username=username
+                action=Action.tracking_new_unsubscribed.action, username=username
+            ).pack(),
+        )
+        builder.button(
+            text=Action.tracking_subscribtions.text,
+            callback_data=TrackingActionCallback(
+                action=Action.tracking_subscribtions.action, username=username
+            ).pack(),
+        )
+        builder.button(
+            text=Action.tracking_new_unsubscribed.text,
+            callback_data=TrackingActionCallback(
+                action=Action.tracking_unsubscribes.action, username=username
             ).pack(),
         )
         builder.button(
@@ -262,7 +274,7 @@ class KeyboardRepository:
                 total_count,
                 current_page,
                 TrackingActionCallback(
-                    action=Action.tracking_new_unsubscribes.action,
+                    action=Action.tracking_new_unsubscribed.action,
                     username=username,
                 ),
                 on_page_count,
@@ -287,7 +299,7 @@ class KeyboardRepository:
                 total_count,
                 current_page,
                 TrackingActionCallback(
-                    action=Action.tracking_new_subscribes.action,
+                    action=Action.tracking_new_subscribers.action,
                     username=username,
                 ),
                 on_page_count,

@@ -99,6 +99,7 @@ def _setup_dispatcher(dispatcher: Dispatcher):
     dispatcher.include_routers(handlers.tracking_media.router)
     dispatcher.include_routers(handlers.subscription.router)
     dispatcher.include_routers(handlers.tracking_follower.router)
+    dispatcher.include_routers(handlers.tracking_following.router)
     handlers.error.setup_error_handlers(dispatcher)
     setup_di(dispatcher)
 

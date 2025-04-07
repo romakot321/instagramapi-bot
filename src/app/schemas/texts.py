@@ -114,6 +114,12 @@ def build_tracking_stats_text(
     return escape_markdown(text)
 
 
+def build_tracking_following_text(following: list[str]) -> str:
+    return "\n".join(
+        _tracking_follower_text.format(tracking=tracking) for tracking in following
+    )
+
+
 def build_tracking_followers_text(followers: list[str]) -> str:
     return "\n".join(
         _tracking_follower_text.format(tracking=tracking) for tracking in followers

@@ -2,7 +2,7 @@ from aiohttp import ClientSession
 from loguru import logger
 import os
 
-from app.schemas.instagram import InstagramMediaListSchema, InstagramMediaSchema, InstagramMediaStatsSchema, InstagramMediaUserStatsSchema, InstagramUserFollowersDifferenceSchema, InstagramUserSchema, InstagramUserStatsSchema
+from app.schemas.instagram import InstagramMediaListSchema, InstagramMediaSchema, InstagramMediaStatsSchema, InstagramMediaUserStatsSchema, InstagramUserFollowersDifferenceSchema, InstagramUserFollowingDifferenceSchema, InstagramUserSchema, InstagramUserStatsSchema
 
 
 class InstagramRepository:
@@ -22,6 +22,14 @@ class InstagramRepository:
                 raise ValueError(await resp.text())
             body = await resp.json()
         return [InstagramUserFollowersDifferenceSchema.model_validate(i) for i in body]
+
+    async def get_user_following_difference(self, username: str) -> list[InstagramUserFollowingDifferenceSchema]:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get(f"/api/user/{username}/following")
+            if resp.status != 200:
+                raise ValueError(await resp.text())
+            body = await resp.json()
+        return [InstagramUserFollowingDifferenceSchema.model_validate(i) for i in body]
 
     async def get_user_followers(self, username: str) -> list[InstagramUserSchema]:
         raise DeprecationWarning("Deprecated function")

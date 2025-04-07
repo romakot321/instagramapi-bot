@@ -44,7 +44,7 @@ def register_cors(application):
     )
 
 
-@repeat_every(seconds=3600)
+@repeat_every(seconds=3600, wait_first=1)
 async def send_reports():
     if dt.datetime.now(tz=dt.UTC).hour != 19:
         return

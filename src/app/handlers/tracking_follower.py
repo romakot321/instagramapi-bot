@@ -34,7 +34,7 @@ async def tracking_followers(
 
 @router.callback_query(
     TrackingActionCallback.filter(
-        F.action == Action.tracking_new_subscribes.action
+        F.action == Action.tracking_new_subscribers.action
     )
 )
 async def tracking_new_subscribes(
@@ -49,7 +49,7 @@ async def tracking_new_subscribes(
 
 @router.callback_query(
     TrackingActionCallback.filter(
-        F.action == Action.tracking_new_unsubscribes.action
+        F.action == Action.tracking_new_unsubscribed.action
     )
 )
 async def tracking_new_unsubscribes(

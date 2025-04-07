@@ -59,3 +59,10 @@ class InstagramUserFollowersDifferenceSchema(BaseModel):
     subscribes_usernames: list[str]
     unsubscribes_usernames: list[str]
     created_at: dt.datetime
+
+
+class InstagramUserFollowingDifferenceSchema(BaseModel):
+    username: str
+    subscribes_usernames: list[str]
+    unsubscribes_usernames: list[str]
+    created_at: dt.datetime
