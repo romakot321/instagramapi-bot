@@ -26,8 +26,8 @@ async def show_tracking_media(
     bot: Bot,
     tracking_media_service: Annotated[TrackingMediaService, Depends(TrackingMediaService.init)],
 ):
-    method = await tracking_media_service.handle_show_tracking_medias(callback_query, callback_data)
-    await bot(method)
+    for method in await tracking_media_service.handle_show_tracking_medias(callback_query, callback_data):
+        await bot(method)
 
 
 @router.callback_query(
@@ -43,19 +43,4 @@ async def tracking_media_stats(
 ):
     for method in (await tracking_media_service.handle_tracking_media_stats(callback_query, callback_data)):
         await bot(method)
-
-
-@router.callback_query(
-    TrackingMediaActionCallback.filter(
-        F.action == Action.tracking_media_display.action
-    )
-)
-async def tracking_media_display(
-    callback_query: CallbackQuery,
-    callback_data: TrackingMediaActionCallback,
-    bot: Bot,
-    tracking_media_service: Annotated[TrackingMediaService, Depends(TrackingMediaService.init)],
-):
-    method = await tracking_media_service.handle_tracking_media_display(callback_query, callback_data)
-    await bot(method)
 

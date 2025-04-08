@@ -12,7 +12,11 @@ from app.repositories.instagram import InstagramRepository
 from app.repositories.keyboard import KeyboardRepository
 from app.repositories.subscription import SubscriptionRepository
 from app.repositories.user import UserRepository
-from app.schemas.action_callback import Action, SubscriptionActionCallback
+from app.schemas.action_callback import (
+    Action,
+    SubscriptionActionCallback,
+    TrackingActionCallback,
+)
 from app.schemas.message import TextMessage
 from app.schemas.texts import build_subscription_info_text, subscription_paywall_text
 from app.services.utils import build_aiogram_method
@@ -70,16 +74,29 @@ class SubscriptionService:
             return await self._handle_new_subscription(query)
         return await self._handle_subscription_menu_show(query, subscriptions)
 
-    async def handle_subscription_add(self, tg_object: CallbackQuery | Message) -> TelegramMethod:
+    async def handle_subscription_add(
+        self, tg_object: CallbackQuery | Message
+    ) -> TelegramMethod:
         message = TextMessage(
             text=subscription_paywall_text,
             reply_markup=self.keyboard_repository.build_paywall_keyboard(),
-            message_id=tg_object.message.message_id if isinstance(tg_object, CallbackQuery) else None,
         )
-        return build_aiogram_method(tg_object.from_user.id, message, use_edit=isinstance(tg_object, CallbackQuery))
+        return build_aiogram_method(None, tg_object=tg_object, message=message)
 
     async def handle_subscription_add_created(
         self, query: CallbackQuery, data: SubscriptionActionCallback
     ) -> TelegramMethod:
         message = TextMessage(text="Оплата получена")
         return build_aiogram_method(query.from_user.id, message)
+
+    async def handle_subscription_add_big_tracking(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> TelegramMethod:
+        message = TextMessage(
+            text=f"Оплата подписки на аккаунт {data.username}" \
+                  "\nЭто необходимо, так как профиль содержит слишком большой объем данных",
+            reply_markup=self.keyboard_repository.build_paywall_big_tracking_keyboard(
+                data.username
+            ),
+        )
+        return build_aiogram_method(None, tg_object=query, message=message)

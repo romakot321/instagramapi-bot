@@ -6,7 +6,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
 from aiogram3_di import Depends
 
-from app.schemas.action_callback import Action, ActionCallback, SubscriptionActionCallback
+from app.schemas.action_callback import Action, ActionCallback, SubscriptionActionCallback, TrackingActionCallback
 from app.services.subscription import SubscriptionService
 
 router = Router(name=__name__)
@@ -33,6 +33,19 @@ async def subscription_menu_message(
     subscription_service: Annotated[SubscriptionService, Depends(SubscriptionService.init)],
 ):
     method = await subscription_service.handle_subscription_menu(message)
+    await bot(method)
+
+
+@router.callback_query(
+    TrackingActionCallback.filter(F.action == Action.subscription_add.action)
+)
+async def subscription_add_big_tracking(
+    query: CallbackQuery,
+    callback_data: TrackingActionCallback,
+    bot: Bot,
+    subscription_service: Annotated[SubscriptionService, Depends(SubscriptionService.init)],
+):
+    method = await subscription_service.handle_subscription_add_big_tracking(query, callback_data)
     await bot(method)
 
 

@@ -45,17 +45,23 @@ _tracking_info_text = """
 🧑‍💻  Подписчиков: {schema.followers_count}
 ⭐️  Подписок: {schema.following_count}
 🖼  Постов: {schema.media_count}
-ℹ️  Описание: TODO
+ℹ️  Описание: {schema.biography}
 """
 
 _tracking_info_masked_text = """
 Никнейм: {schema.username}
 Имя: {schema.full_name}
-Постов: ###
+Постов: ||||скрыто||||
 Подписчиков: {schema.followers_count}
 Подписок: {schema.following_count}
 
-Некоторые данные и статистика скрыты
+Текущая статистика:
+Количество постов: ||||скрыто||||
+В среднем лайков на пост: ||||скрыто||||
+В среднем комментариев на пост: ||||скрыто||||
+Коэф. вовлеченности: ||||скрыто||||
+
+Некоторые данные и статистика скрыты. Для показа приобретите подписку
 """
 
 _tracking_stats_text = """
@@ -66,9 +72,17 @@ _tracking_stats_text = """
 🤔 Коэф. вовлеченности: {media_coeff}%
 
 📊 **Статистика изменений от {change.previous_stats_date:%d.%m.%Y %H:%M}**
-🖼 Изменение постов: {change.media_count_difference}
-🧑‍💻 Изменение подписчиков: 🔽 {change.followers_count_difference}
-⭐️ Изменение подписок: 🔽 {change.following_count_difference}
+🖼 Изменение постов: {media_count_difference}
+🧑‍💻 Изменение подписчиков: {followers_count_difference}
+⭐️ Изменение подписок: {following_count_difference}
+"""
+
+_private_tracking_text = """
+Профиль {schema.username} закрыт.
+"""
+
+_tracking_not_found_text = """
+Профиль {tracking_username} не найден.
 """
 
 _tracking_follower_text = """instagram.com/{tracking}"""
@@ -86,12 +100,27 @@ _tracking_report_text = """
 """
 
 
+def build_tracking_not_found_text(tracking_username: str) -> str:
+    return _tracking_not_found_text.format(tracking_username=tracking_username)
+
+
+def build_tracking_private_text(schema: InstagramUserSchema) -> str:
+    return _private_tracking_text.format(schema=schema)
+
+
+def build_big_tracking_info_text(schema: InstagramUserSchema) -> str:
+    return (
+        build_tracking_info_text(schema=schema)
+        + "\n❗️ Для подписки на этот аккаунт потребуется оплатить доступ"
+    )
+
+
 def build_tracking_info_text(schema: InstagramUserSchema) -> str:
     return _tracking_info_text.format(schema=schema)
 
 
 def build_tracking_info_masked_text(schema: InstagramUserSchema) -> str:
-    return _tracking_info_masked_text.format(schema=schema)
+    return escape_markdown(_tracking_info_masked_text.format(schema=schema))
 
 
 def build_tracking_stats_text(
@@ -99,6 +128,24 @@ def build_tracking_stats_text(
     current: InstagramMediaUserStatsSchema,
     tracking: InstagramUserSchema,
 ) -> str:
+    followers_count_difference = "0"
+    if change.followers_count_difference > 0:
+        followers_count_difference = f"🔼 (+{change.followers_count_difference})"
+    elif change.followers_count_difference < 0:
+        followers_count_difference = f"🔽 ({change.followers_count_difference})"
+
+    following_count_difference = "0"
+    if change.following_count_difference > 0:
+        following_count_difference = f"🔼 (+{change.following_count_difference})"
+    elif change.following_count_difference < 0:
+        following_count_difference = f"🔽 ({change.following_count_difference})"
+
+    media_count_difference = "0"
+    if change.media_count_difference > 0:
+        media_count_difference = f"🔼 (+{change.media_count_difference})"
+    elif change.media_count_difference < 0:
+        media_count_difference = f"🔽 ({change.media_count_difference})"
+
     text = _tracking_stats_text.format(
         media_count=current.count,
         media_likes=round(current.like_count_sum / current.count, 2),
@@ -110,6 +157,9 @@ def build_tracking_stats_text(
             2,
         ),
         change=change,
+        media_count_difference=media_count_difference,
+        followers_count_difference=followers_count_difference,
+        following_count_difference=following_count_difference
     )
     return escape_markdown(text)
 
@@ -146,7 +196,7 @@ def build_tracking_report_text(
     )
 
 
-_media_stats_text = """
+_media_stats_video_text = """
 {media.caption_text}
 Текущая статистика:
 - Комментариев: {stats.comment_count_current}
@@ -159,10 +209,23 @@ _media_stats_text = """
 - Просмотров: {stats.play_count_difference}
 """
 
+_media_stats_text = """
+{media.caption_text}
+Текущая статистика:
+- Комментариев: {stats.comment_count_current}
+- Лайков: {stats.like_count_current}
+
+Статистика изменений от {stats.created_at:%d.%m.%Y %H:%M}
+- Комментариев: {stats.comment_count_difference}
+- Лайков: {stats.like_count_difference}
+"""
+
 
 def build_media_stats_text(
     stats: InstagramMediaStatsSchema, media: TrackingMedia
 ) -> str:
+    if stats.play_count_current is not None:
+        return _media_stats_video_text.format(media=media, stats=stats)
     return _media_stats_text.format(media=media, stats=stats)
 
 

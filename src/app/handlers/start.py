@@ -2,7 +2,7 @@ from typing import Annotated
 
 from aiogram import F, Router
 from aiogram import Bot
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, StateFilter
 from aiogram.types import CallbackQuery, Message
 from aiogram3_di import Depends
 
@@ -35,3 +35,8 @@ async def main_menu(
 @router.callback_query(ActionCallback.filter(F.action == Action.delete_message.action))
 async def delete_message(callback_query: CallbackQuery, bot: Bot):
     await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
+
+
+# @router.message(F.text.not_in([i.text for i in Action]) and StateFilter(None))
+# async def unknown_command(message: Message):
+#     await message.answer("Неизвестная команда")

@@ -17,12 +17,27 @@ class SubscriptionService[Table: Subscription, int](BaseService):
     response: Response
 
     tariffs = [{"id": 0, "price": 200, "access_days": 30, "text": "200 руб. за месяц"}]
+    tariffs_big_tracking = [{"id": 0, "price": 590, "access_days": 30, "text": "1 отчет в день за 590 руб."}]
 
     async def get_tariffs_list(self) -> list:
         return self.tariffs
 
+    async def get_tariffs_big_tracking_list(self) -> list:
+        return self.tariffs_big_tracking
+
     async def create(self, schema: SubscriptionCreateSchema) -> Subscription:
         tariff = self.tariffs[schema.tariff_id]
+        expire_at = dt.datetime.now() + dt.timedelta(days=tariff["access_days"])
+        model = await self._create(
+            user_telegram_id=schema.user_telegram_id,
+            expire_at=expire_at,
+            tariff_id=schema.tariff_id,
+        )
+        await BotController.send_subscription_created(schema.user_telegram_id)
+        return model
+
+    async def create_big_tracking(self, schema: SubscriptionCreateSchema) -> Subscription:
+        tariff = self.tariffs_big_tracking[schema.tariff_id]
         expire_at = dt.datetime.now() + dt.timedelta(days=tariff["access_days"])
         model = await self._create(
             user_telegram_id=schema.user_telegram_id,

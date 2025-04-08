@@ -38,11 +38,51 @@ class KeyboardRepository:
         builder.adjust(1)
         return builder.as_markup()
 
+    def build_paywall_big_tracking_keyboard(
+        self, tracking_username: str
+    ) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            text=Action.subscription_add.text,
+            web_app=types.WebAppInfo(
+                url="https://"
+                + urlparse(BOT_WEBHOOK_URL).netloc
+                + "/paywallBigTracking?username="
+                + tracking_username
+            ),
+        )
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def build_to_add_tracking_keyboard(self) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(**Action.add_tracking.model_dump())
+        return builder.as_markup()
+
     def build_to_trackings_max_buy_keyboard(
         self, tracking_username: str
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(**Action.subscription_add.model_dump())
+        builder.button(
+            text="Назад",
+            callback_data=TrackingActionCallback(
+                action=Action.tracking_show.action, username=tracking_username
+            ).pack(),
+        )
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def build_to_paywall_big_tracking_keyboard(
+        self, tracking_username: str
+    ) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            text="Оплатить доступ",
+            callback_data=TrackingActionCallback(
+                action=Action.subscription_add.action, username=tracking_username
+            ).pack(),
+        )
         builder.button(
             text="Назад",
             callback_data=TrackingActionCallback(
@@ -94,7 +134,8 @@ class KeyboardRepository:
                     action=Action.tracking_subscribe.action, username=username
                 ).pack(),
             )
-        builder.button(**Action.show_trackings.model_dump() | {"text": "К списку"})
+        if subscribed:
+            builder.button(**Action.show_trackings.model_dump() | {"text": "Мои отслеживания"})
         builder.adjust(1)
         return builder.as_markup()
 
@@ -134,14 +175,10 @@ class KeyboardRepository:
         builder.adjust(1)
         return builder.as_markup()
 
-    def build_tracking_media_keyboard(self, tracking_media: TrackingMedia, page: int = 0):
+    def build_tracking_media_keyboard(
+        self, tracking_media: TrackingMedia, page: int = 0
+    ):
         builder = InlineKeyboardBuilder()
-        builder.button(
-            text=Action.tracking_media_display.text,
-            callback_data=TrackingMediaActionCallback(
-                action=Action.tracking_media_display.action, instagram_id=tracking_media.instagram_id
-            )
-        )
         builder.button(
             text="Назад",
             callback_data=TrackingActionCallback(
@@ -153,7 +190,9 @@ class KeyboardRepository:
         builder.adjust(1)
         return builder.as_markup()
 
-    def build_to_tracking_media_stats_keyboard(self, tracking_media_instagram_id: str, page: int = 0) -> types.InlineKeyboardMarkup:
+    def build_to_tracking_media_stats_keyboard(
+        self, tracking_media_instagram_id: str, page: int = 0
+    ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.row(
             types.InlineKeyboardButton(
@@ -161,7 +200,7 @@ class KeyboardRepository:
                 callback_data=TrackingMediaActionCallback(
                     action=Action.tracking_media_stats.action,
                     instagram_id=tracking_media_instagram_id,
-                    page=page
+                    page=page,
                 ).pack(),
             )
         )
@@ -178,7 +217,8 @@ class KeyboardRepository:
         for media in tracking_medias:
             builder.row(
                 types.InlineKeyboardButton(
-                    text=media.created_at.strftime("%d.%m.%Y %H:%M") + f"  {media.like_count} ❤️ {media.comment_count} 💬",
+                    text=media.created_at.strftime("%d.%m.%Y %H:%M")
+                    + f"  {media.like_count} ❤️ {media.comment_count} 💬",
                     callback_data=TrackingMediaActionCallback(
                         action=Action.tracking_media_stats.action,
                         instagram_id=media.instagram_id,

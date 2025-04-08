@@ -88,16 +88,19 @@ class TrackingFollowingService:
             for i in range(0, len(subscribes_usernames), 3)
         ]
 
-        message = TextMessage(
-            text=build_tracking_following_text(paginated_subscribes[data.page]),
-            reply_markup=self.keyboard_repository.build_tracking_new_subscribes_keyboard(
-                data.username, len(subscribes_usernames), data.page, on_page_count=10
-            ),
-        )
+        if not paginated_subscribes or len(paginated_subscribes) < data.page:
+            message = TextMessage(text="Подписок нет")
+        else:
+            message = TextMessage(
+                text=build_tracking_following_text(paginated_subscribes[data.page]),
+                reply_markup=self.keyboard_repository.build_tracking_new_subscribes_keyboard(
+                    data.username, len(subscribes_usernames), data.page, on_page_count=10
+                ),
+            )
         return build_aiogram_method(
             query.from_user.id,
             message,
-            use_edit="статистика" not in query.message.text.lower(),
+            use_edit=False,
         )
 
     async def handle_tracking_new_unsubscribes(
@@ -120,14 +123,17 @@ class TrackingFollowingService:
             for i in range(0, len(unsubscribes_usernames), 3)
         ]
 
-        message = TextMessage(
-            text=build_tracking_following_text(paginated_subscribes[data.page]),
-            reply_markup=self.keyboard_repository.build_tracking_new_unsubscribes_keyboard(
-                data.username, len(unsubscribes_usernames), data.page, on_page_count=10
-            ),
-        )
+        if not paginated_subscribes or len(paginated_subscribes) < data.page:
+            message = TextMessage(text="Отписок нет")
+        else:
+            message = TextMessage(
+                text=build_tracking_following_text(paginated_subscribes[data.page]),
+                reply_markup=self.keyboard_repository.build_tracking_new_unsubscribes_keyboard(
+                    data.username, len(unsubscribes_usernames), data.page, on_page_count=10
+                ),
+            )
         return build_aiogram_method(
             query.from_user.id,
             message,
-            use_edit="статистика" not in query.message.text.lower(),
+            use_edit=False,
         )

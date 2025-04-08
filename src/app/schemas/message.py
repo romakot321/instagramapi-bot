@@ -4,7 +4,9 @@ from pydantic import BaseModel, ConfigDict, computed_field, Field
 
 class Message(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    message_id: int | None = None  # message_id used for edit, get it from telegram response
+    message_id: int | None = (
+        None  # message_id used for edit, get it from telegram response
+    )
 
 
 class TextMessage(Message):
@@ -22,12 +24,42 @@ class MediaMessage(Message):
     @computed_field
     @property
     def media(self) -> types.InputMediaDocument:
-        return types.InputMediaDocument(media=self.document, caption=self.caption, parse_mode=self.parse_mode)
+        return types.InputMediaDocument(
+            media=self.document, caption=self.caption, parse_mode=self.parse_mode
+        )
+
+
+class VideoMessage(Message):
+    caption: str | None = None
+    video: types.BufferedInputFile | str
+    reply_markup: types.InlineKeyboardMarkup | types.ReplyKeyboardMarkup | None = None
+    parse_mode: str | None = None
+
+    @computed_field
+    @property
+    def media(self) -> types.InputMediaVideo:
+        return types.InputMediaVideo(
+            media=self.video, caption=self.caption, parse_mode=self.parse_mode
+        )
+
+
+class PhotoMessage(Message):
+    caption: str | None = None
+    photo: types.BufferedInputFile | str
+    reply_markup: types.InlineKeyboardMarkup | types.ReplyKeyboardMarkup | None = None
+    parse_mode: str | None = None
+
+    @computed_field
+    @property
+    def media(self) -> types.InputMediaPhoto:
+        return types.InputMediaPhoto(
+            media=self.photo, caption=self.caption, parse_mode=self.parse_mode
+        )
 
 
 class MediaGroupMessage(Message):
     caption: str | None = None
-    files_: list[bytes] = Field(validation_alias='files')
+    files_: list[bytes] = Field(validation_alias="files")
     parse_mode: str | None = None
     reply_markup: types.InlineKeyboardMarkup | types.ReplyKeyboardMarkup | None = None
 
@@ -38,13 +70,14 @@ class MediaGroupMessage(Message):
             return []
         media = [
             types.InputMediaDocument(
-                media=types.BufferedInputFile(self.files_[0], filename='file'),
+                media=types.BufferedInputFile(self.files_[0], filename="file"),
                 caption=self.caption,
-                parse_mode=self.parse_mode
+                parse_mode=self.parse_mode,
             )
         ]
         return media + [
-            types.InputMediaDocument(media=types.BufferedInputFile(file, filename='file'))
+            types.InputMediaDocument(
+                media=types.BufferedInputFile(file, filename="file")
+            )
             for file in self.files_[1:]
         ]
-

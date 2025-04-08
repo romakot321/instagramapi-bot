@@ -8,12 +8,15 @@ from app.schemas.instagram import InstagramMediaListSchema, InstagramMediaSchema
 class InstagramRepository:
     API_URL = os.getenv("INSTAGRAM_API_URL")
 
-    async def get_user_info(self, username: str) -> InstagramUserSchema:
+    async def get_user_info(self, username: str) -> InstagramUserSchema | None:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get("/api/user", params={"username": username})
-            assert resp.status in (200, 201), await resp.text()
-            body = await resp.json()
-        return InstagramUserSchema.model_validate(body)
+            if resp.status in (200, 201):
+                body = await resp.json()
+                return InstagramUserSchema.model_validate(body)
+            elif resp.status == 404:
+                return None
+            raise ValueError(await resp.text())
 
     async def get_user_followers_difference(self, username: str) -> list[InstagramUserFollowersDifferenceSchema]:
         async with ClientSession(base_url=self.API_URL) as session:

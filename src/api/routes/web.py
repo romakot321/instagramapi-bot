@@ -29,3 +29,20 @@ async def paywall(
         }
     )
 
+
+@router.get("/paywall/bigTracking", response_class=HTMLResponse)
+async def paywall_big_tracking(
+        request: Request,
+        username: str = Query(),
+        service: SubscriptionService = Depends(SubscriptionService.depend)
+):
+    tariffs = await service.get_tariffs_big_tracking_list()
+    return templates.TemplateResponse(
+        "paywall_big_tracking.html",
+        {
+            "request": request,
+            "tariffs": tariffs,
+            "tracking_username": username
+        }
+    )
+

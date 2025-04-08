@@ -20,13 +20,24 @@ router = Router(name=__name__)
 @router.message(
     F.text == Action.add_tracking.text
 )
-async def add_tracking(
+async def add_tracking_message(
     message: Message,
     state: FSMContext,
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
     method = await tracking_service.handle_form_create(message, state)
+    await bot(method)
+
+
+@router.callback_query(ActionCallback.filter(F.action == Action.add_tracking.action))
+async def add_tracking_callback(
+    callback_query: CallbackQuery,
+    state: FSMContext,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
+):
+    method = await tracking_service.handle_form_create(callback_query, state)
     await bot(method)
 
 

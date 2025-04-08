@@ -6,9 +6,14 @@ class InstagramUserSchema(BaseModel):
     id: str
     username: str
     full_name: str
+    is_private: bool
+    biography: str | None = None
     media_count: int | None = None
     followers_count: int | None = None
     following_count: int | None = None
+
+    def is_big(self) -> bool:
+        return (self.followers_count or 0) > 20000 or (self.following_count or 0) > 3000
 
 
 class InstagramUserStatsSchema(BaseModel):
