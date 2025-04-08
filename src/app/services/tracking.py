@@ -60,6 +60,7 @@ class TrackingService:
         )
 
     def _extract_username(self, user_input: str) -> str | None:
+        user_input = user_input.lstrip("@")
         url = urlparse(user_input)
         if url.netloc == "":
             return user_input

@@ -46,8 +46,8 @@ class UserService:
     async def _handle_new_user(self, tg_object: Message | CallbackQuery):
         await self.user_repository.create(
             telegram_id=tg_object.from_user.id,
-            telegram_name=msg.from_user.full_name,
-            telegram_username=msg.from_user.username
+            telegram_name=tg_object.from_user.full_name,
+            telegram_username=tg_object.from_user.username
         )
         message = TextMessage(
             text=start_text,
