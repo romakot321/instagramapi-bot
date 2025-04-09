@@ -96,6 +96,7 @@ class TrackingFollowingService:
                 reply_markup=self.keyboard_repository.build_tracking_new_subscribes_keyboard(
                     data.username, len(subscribes_usernames), data.page, on_page_count=10
                 ),
+                parse_mode="MarkdownV2"
             )
         return build_aiogram_method(
             query.from_user.id,
@@ -131,6 +132,7 @@ class TrackingFollowingService:
                 reply_markup=self.keyboard_repository.build_tracking_new_unsubscribes_keyboard(
                     data.username, len(unsubscribes_usernames), data.page, on_page_count=10
                 ),
+                parse_mode="MarkdownV2"
             )
         return build_aiogram_method(
             query.from_user.id,

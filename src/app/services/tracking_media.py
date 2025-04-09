@@ -1,7 +1,7 @@
 import datetime as dt
 import mimetypes
 from loguru import logger
-from typing import Annotated
+from typing import Annotated, AsyncGenerator
 from urllib.parse import unquote_plus
 
 from aiogram3_di import Depends
@@ -109,17 +109,18 @@ class TrackingMediaService:
         newest_media = list(sorted(tracking_medias, reverse=True, key=lambda m: m.updated_at or dt.date(year=1970, month=1, day=1)))[0]
         if (dt.datetime.now() - newest_media.updated_at).total_seconds() >= 12 * 3600:
             tracking_info = await self.instagram_repository.get_user_info(username)
-            if tracking_info.media_count == total_count:
-                return tracking_medias, total_count
-            tracking_medias = await self._update_tracking_medias(username)
-            return tracking_medias[page * count:(page + 1) * count], len(tracking_medias)
+            if tracking_info.media_count != total_count:
+                tracking_medias = await self._update_tracking_medias(username)
+                return tracking_medias[page * count:(page + 1) * count], len(tracking_medias)
 
         return tracking_medias, total_count
 
-    async def handle_show_tracking_medias(self, query: CallbackQuery, data: TrackingActionCallback) -> list[TelegramMethod]:
-        methods = []
+    async def handle_show_tracking_medias(self, query: CallbackQuery, data: TrackingActionCallback) -> AsyncGenerator[TelegramMethod]:
         if query.message.document is not None or query.message.photo is not None or query.message.video is not None:
-            methods.append(DeleteMessage(chat_id=query.from_user.id, message_id=query.message.message_id))
+            yield DeleteMessage(chat_id=query.from_user.id, message_id=query.message.message_id)
+            yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаем посты..."), use_edit=False)
+        else:
+            yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаем посты..."), use_edit=True)
 
         models, total_count = await self._get_tracking_medias(data.username, page=data.page)
         message = TextMessage(
@@ -127,8 +128,7 @@ class TrackingMediaService:
             reply_markup=self.keyboard_repository.build_tracking_medias_list_keyboard(models, data.page, total_count),
             message_id=query.message.message_id
         )
-        methods.append(build_aiogram_method(query.from_user.id, message, use_edit=not methods))
-        return methods
+        yield build_aiogram_method(query.from_user.id, message, use_edit=True)
 
     async def handle_tracking_media_stats(self, query: CallbackQuery, data: TrackingMediaActionCallback) -> list[TelegramMethod]:
         methods = []

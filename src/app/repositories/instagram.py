@@ -67,17 +67,17 @@ class InstagramRepository:
             body = await resp.json()
         return InstagramMediaSchema.model_validate(body)
 
-    async def get_media_stats(self, media_id: str) -> InstagramMediaStatsSchema:
+    async def get_media_stats(self, media_id: str, days: int = 7) -> InstagramMediaStatsSchema:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/media/" + media_id + "/stats", params={"days": 7})
+            resp = await session.get("/api/media/" + media_id + "/stats", params={"days": days})
             assert resp.status == 200, await resp.text()
             body = await resp.json()
         logger.debug(body)
         return InstagramMediaStatsSchema.model_validate(body)
 
-    async def get_media_user_stats(self, username: str) -> InstagramMediaUserStatsSchema:
+    async def get_media_user_stats(self, username: str, days: int = 7) -> InstagramMediaUserStatsSchema:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/media/stats", params={"days": 7, "username": username})
+            resp = await session.get("/api/media/stats", params={"days": days, "username": username})
             assert resp.status == 200, await resp.text()
             body = await resp.json()
         return InstagramMediaUserStatsSchema.model_validate(body)

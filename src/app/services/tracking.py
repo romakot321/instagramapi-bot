@@ -215,6 +215,7 @@ class TrackingService:
             reply_markup=self.keyboard_repository.build_tracking_keyboard(
                 info.username, subscribed
             ),
+            parse_mode="MarkdownV2"
         )
         return build_aiogram_method(None, message=message, tg_object=tg_object)
 
@@ -247,6 +248,7 @@ class TrackingService:
             reply_markup=self.keyboard_repository.build_tracking_keyboard(
                 data.username, subscribed
             ),
+            parse_mode="MarkdownV2"
         )
         return build_aiogram_method(None, message=message, tg_object=tg_object)
 
@@ -272,11 +274,14 @@ class TrackingService:
     ) -> TelegramMethod:
         user_info = await self.instagram_repository.get_user_info(data.username)
         user_stats = await self.instagram_repository.get_user_stats(data.username)
-        media_stats = await self.instagram_repository.get_media_user_stats(
-            data.username
+        weekly_media_stats = await self.instagram_repository.get_media_user_stats(
+            data.username, days=7
+        )
+        monthly_media_stats = await self.instagram_repository.get_media_user_stats(
+            data.username, days=30
         )
         message = TextMessage(
-            text=build_tracking_stats_text(user_stats, media_stats, user_info),
+            text=build_tracking_stats_text(user_stats, weekly_media_stats, monthly_media_stats, user_info),
             reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
                 data.username
             ),

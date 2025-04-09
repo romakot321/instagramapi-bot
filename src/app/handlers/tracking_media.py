@@ -26,7 +26,7 @@ async def show_tracking_media(
     bot: Bot,
     tracking_media_service: Annotated[TrackingMediaService, Depends(TrackingMediaService.init)],
 ):
-    for method in await tracking_media_service.handle_show_tracking_medias(callback_query, callback_data):
+    async for method in tracking_media_service.handle_show_tracking_medias(callback_query, callback_data):
         await bot(method)
 
 

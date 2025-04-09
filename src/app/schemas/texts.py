@@ -40,7 +40,7 @@ start_text = escape_markdown(_start_text)
 
 _tracking_info_text = """
 📱  Никнейм: {schema.username}
-🔗  Ссылка на аккаунт: instagram.com/{schema.username}
+🔗  Ссылка на аккаунт: [[{schema.username}]]((https://instagram.com/{schema.username}))
 📛  Имя: {schema.full_name}
 🧑‍💻  Подписчиков: {schema.followers_count}
 ⭐️  Подписок: {schema.following_count}
@@ -69,7 +69,8 @@ _tracking_stats_text = """
 🖼 Количество постов: {media_count}
 👍 В среднем лайков на пост: {media_likes}
 ⌨️ В среднем комментариев на пост: {media_comments}
-🤔 Коэф. вовлеченности: {media_coeff}%
+🤔 Недельный коэф. вовлеченности: {weekly_media_coeff}%
+🤔 Месячный коэф. вовлеченности: {monthly_media_coeff}%
 
 📊 **Статистика изменений от {change.previous_stats_date:%d.%m.%Y %H:%M}**
 🖼 Изменение постов: {media_count_difference}
@@ -85,14 +86,14 @@ _tracking_not_found_text = """
 Профиль {tracking_username} не найден.
 """
 
-_tracking_follower_text = """instagram.com/{tracking}"""
+_tracking_follower_text = """[[{tracking}]]((https://instagram.com/{tracking}))"""
 
 _tracking_report_text = """
-Отчет по пользователю: @{tracking.username}
+Отчет по пользователю: {tracking.username}
 
-Ссылка на аккаунт: https://www.instagram.com/{tracking.username}
+Ссылка на аккаунт: [[{tracking.username}]]((https://instagram.com/{tracking.username}))
 
-📊 Статистика от 31.03.2025 17:47
+📊 Статистика от {change.previous_stats_date:%d.%m.%Y %H:%M}
 
 🖼 Количество постов: 🔼{media_count} ({change.media_count_difference})
 🧑‍💻 Количество подписчиков: 🔽{tracking.followers_count} ({change.followers_count_difference})
@@ -116,7 +117,7 @@ def build_big_tracking_info_text(schema: InstagramUserSchema) -> str:
 
 
 def build_tracking_info_text(schema: InstagramUserSchema) -> str:
-    return _tracking_info_text.format(schema=schema)
+    return escape_markdown(_tracking_info_text.format(schema=schema))
 
 
 def build_tracking_info_masked_text(schema: InstagramUserSchema) -> str:
@@ -125,7 +126,8 @@ def build_tracking_info_masked_text(schema: InstagramUserSchema) -> str:
 
 def build_tracking_stats_text(
     change: InstagramUserStatsSchema,
-    current: InstagramMediaUserStatsSchema,
+    weekly: InstagramMediaUserStatsSchema,
+    monthly: InstagramMediaUserStatsSchema,
     tracking: InstagramUserSchema,
 ) -> str:
     followers_count_difference = "0"
@@ -147,11 +149,17 @@ def build_tracking_stats_text(
         media_count_difference = f"🔽 ({change.media_count_difference})"
 
     text = _tracking_stats_text.format(
-        media_count=current.count,
-        media_likes=round(current.like_count_sum / current.count, 2),
-        media_comments=round(current.comment_count_sum / current.count, 2),
-        media_coeff=round(
-            (current.like_count_sum + current.comment_count_sum)
+        media_count=weekly.count,
+        media_likes=round(weekly.like_count_sum / weekly.count, 2) if weekly.count else 0,
+        media_comments=round(weekly.comment_count_sum / weekly.count, 2) if weekly.count else 0,
+        weekly_media_coeff=round(
+            (weekly.like_count_sum + weekly.comment_count_sum)
+            / tracking.followers_count
+            * 100,
+            2,
+        ),
+        monthly_media_coeff=round(
+            (monthly.like_count_sum + monthly.comment_count_sum)
             / tracking.followers_count
             * 100,
             2,
@@ -165,15 +173,15 @@ def build_tracking_stats_text(
 
 
 def build_tracking_following_text(following: list[str]) -> str:
-    return "\n".join(
+    return escape_markdown("\n".join(
         _tracking_follower_text.format(tracking=tracking) for tracking in following
-    )
+    ))
 
 
 def build_tracking_followers_text(followers: list[str]) -> str:
-    return "\n".join(
+    return escape_markdown("\n".join(
         _tracking_follower_text.format(tracking=tracking) for tracking in followers
-    )
+    ))
 
 
 def build_tracking_report_text(
@@ -181,7 +189,7 @@ def build_tracking_report_text(
     current: InstagramMediaUserStatsSchema,
     tracking: InstagramUserSchema,
 ) -> str:
-    return _tracking_report_text.format(
+    text = _tracking_report_text.format(
         media_count=current.count,
         media_likes=round(current.like_count_sum / current.count, 2),
         media_comments=round(current.comment_count_sum / current.count, 2),
@@ -194,6 +202,7 @@ def build_tracking_report_text(
         change=change,
         tracking=tracking,
     )
+    return escape_markdown(text)
 
 
 _media_stats_video_text = """
@@ -234,7 +243,14 @@ _subscription_info_text = """
 """
 
 subscription_paywall_text = """
-Оформите подписку для продолжения
+Вы уже используете нашего бота для отслеживания базовой статистики, и это здорово! Но что, если я скажу вам, что вы можете получить гораздо больше, чтобы вывести статистику Instagram на совершенно новый уровень?
+
+Вот что вы получите с Premium:
+
+• Новые подписчики и отписки: Будь в курсе роста и падения аудитории. 📊
+• Количество лайков и комментариев: Анализируй вовлеченность под своими постами. ❤️💬
+• Статистика постов: Узнай, какие публикации заходят лучше всего. 📝
+• Другие полезные метрики: Получай полную картину активности твоего профиля. 📊
 """
 
 
