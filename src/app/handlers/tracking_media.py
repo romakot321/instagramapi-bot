@@ -6,6 +6,7 @@ from aiogram import Bot
 from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery
 from aiogram.types import Message
+from aiogram.methods import DeleteMessage, SendMessage
 from aiogram.fsm.context import FSMContext
 from aiogram3_di import Depends
 
@@ -26,8 +27,11 @@ async def show_tracking_media(
     bot: Bot,
     tracking_media_service: Annotated[TrackingMediaService, Depends(TrackingMediaService.init)],
 ):
+    prev_msg = None
     async for method in tracking_media_service.handle_show_tracking_medias(callback_query, callback_data):
-        await bot(method)
+        prev_msg = await bot(method)
+        if isinstance(method, SendMessage):
+            await bot.delete_message(chat_id=prev_msg.chat.id, message_id=prev_msg.message_id)
 
 
 @router.callback_query(

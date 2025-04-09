@@ -106,7 +106,7 @@
         fetch("/api/subscription/bigTracking", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({tariff_id: +tariffId, user_telegram_id: +userTelegramId, tracking_username: {{ tracking_username }}})
+            body: JSON.stringify({tariff_id: +tariffId, user_telegram_id: +userTelegramId, tracking_username: "{{ tracking_username }}"})
         })
             .then(response => response.json())
             .then(response => window.Telegram.WebApp.close())

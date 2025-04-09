@@ -96,11 +96,13 @@ class TrackingMediaService:
 
         return tracking_medias
 
-    async def _get_tracking_medias(self, username: str, page: int = 1) -> tuple[list[TrackingMedia], int]:
+    async def _get_tracking_medias(self, username: str, page: int = 1, update: bool = False) -> tuple[list[TrackingMedia], int] | None:
         """Return list of tracking_media for username and total count of tracking's media"""
         count = 10
         tracking_medias = await self.tracking_media_repository.list(instagram_username=username, page=page - 1, count=count)
 
+        if not tracking_medias and not update:
+            return None
         if not tracking_medias:
             tracking_medias = await self._load_tracking_medias(username)
             return tracking_medias[page * count:(page + 1) * count], len(tracking_medias)
@@ -108,6 +110,8 @@ class TrackingMediaService:
 
         newest_media = list(sorted(tracking_medias, reverse=True, key=lambda m: m.updated_at or dt.date(year=1970, month=1, day=1)))[0]
         if (dt.datetime.now() - newest_media.updated_at).total_seconds() >= 12 * 3600:
+            if not update:
+                return None
             tracking_info = await self.instagram_repository.get_user_info(username)
             if tracking_info.media_count != total_count:
                 tracking_medias = await self._update_tracking_medias(username)
@@ -116,19 +120,23 @@ class TrackingMediaService:
         return tracking_medias, total_count
 
     async def handle_show_tracking_medias(self, query: CallbackQuery, data: TrackingActionCallback) -> AsyncGenerator[TelegramMethod]:
+        use_edit = True
         if query.message.document is not None or query.message.photo is not None or query.message.video is not None:
             yield DeleteMessage(chat_id=query.from_user.id, message_id=query.message.message_id)
-            yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаем посты..."), use_edit=False)
-        else:
-            yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаем посты..."), use_edit=True)
+            use_edit = False
 
-        models, total_count = await self._get_tracking_medias(data.username, page=data.page)
+        medias = await self._get_tracking_medias(data.username, page=data.page)
+        if medias is None:
+            yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаем посты..."), use_edit=use_edit)
+            models, total_count = await self._get_tracking_medias(data.username, page=data.page, update=True)
+        else:
+            models, total_count = medias
         message = TextMessage(
             text="Публикации пользователя @" + data.username,
             reply_markup=self.keyboard_repository.build_tracking_medias_list_keyboard(models, data.page, total_count),
             message_id=query.message.message_id
         )
-        yield build_aiogram_method(query.from_user.id, message, use_edit=True)
+        yield build_aiogram_method(query.from_user.id, message, use_edit=use_edit)
 
     async def handle_tracking_media_stats(self, query: CallbackQuery, data: TrackingMediaActionCallback) -> list[TelegramMethod]:
         methods = []

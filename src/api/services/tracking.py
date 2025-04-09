@@ -17,7 +17,7 @@ class TrackingService[Table: Tracking, int](BaseService):
     async def create(self, creator_telegram_id: int, tracking_username: str) -> Tracking:
         model = await self._create(
             creator_telegram_id=creator_telegram_id,
-            tracking_username=tracking_username
+            instagram_username=tracking_username
         )
         return model
 

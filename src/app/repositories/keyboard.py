@@ -47,7 +47,7 @@ class KeyboardRepository:
             web_app=types.WebAppInfo(
                 url="https://"
                 + urlparse(BOT_WEBHOOK_URL).netloc
-                + "/paywallBigTracking?username="
+                + "/paywall/bigTracking?username="
                 + tracking_username
             ),
         )
@@ -234,6 +234,7 @@ class KeyboardRepository:
                     action=Action.show_tracking_media.action,
                     username=tracking_medias[0].instagram_username,
                 ),
+                on_page_count=10,
             )
         )
         builder.row(
