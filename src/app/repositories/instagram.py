@@ -2,11 +2,32 @@ from aiohttp import ClientSession
 from loguru import logger
 import os
 
-from app.schemas.instagram import InstagramMediaListSchema, InstagramMediaSchema, InstagramMediaStatsSchema, InstagramMediaUserStatsSchema, InstagramUserFollowersDifferenceSchema, InstagramUserFollowingDifferenceSchema, InstagramUserSchema, InstagramUserStatsSchema
+from app.schemas.instagram import (
+    InstagramMediaListSchema,
+    InstagramMediaSchema,
+    InstagramMediaStatsSchema,
+    InstagramMediaUserStatsSchema,
+    InstagramUserFollowDifferenceSchema,
+    InstagramUserFollowersDifferenceSchema,
+    InstagramUserFollowingDifferenceSchema,
+    InstagramUserSchema,
+    InstagramUserStatsSchema,
+)
 
 
 class InstagramRepository:
     API_URL = os.getenv("INSTAGRAM_API_URL")
+
+    async def start_user_tracking(self, username: str) -> InstagramUserSchema | str:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get("/api/user", params={"username": username})
+            if resp.status in (200, 201):
+                return InstagramUserSchema.model_validate(await resp.json())
+            elif resp.status == 404:
+                return "Профиль не найден"
+            elif resp.status == 400:
+                return (await resp.json())["detail"]
+            raise ValueError(await resp.text())
 
     async def get_user_info(self, username: str) -> InstagramUserSchema | None:
         async with ClientSession(base_url=self.API_URL) as session:
@@ -18,7 +39,9 @@ class InstagramRepository:
                 return None
             raise ValueError(await resp.text())
 
-    async def get_user_followers_difference(self, username: str) -> list[InstagramUserFollowersDifferenceSchema]:
+    async def get_user_followers_difference(
+        self, username: str
+    ) -> list[InstagramUserFollowersDifferenceSchema]:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(f"/api/user/{username}/followers")
             if resp.status != 200:
@@ -26,13 +49,39 @@ class InstagramRepository:
             body = await resp.json()
         return [InstagramUserFollowersDifferenceSchema.model_validate(i) for i in body]
 
-    async def get_user_following_difference(self, username: str) -> list[InstagramUserFollowingDifferenceSchema]:
+    async def get_user_following_difference(
+        self, username: str
+    ) -> list[InstagramUserFollowingDifferenceSchema]:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(f"/api/user/{username}/following")
             if resp.status != 200:
                 raise ValueError(await resp.text())
             body = await resp.json()
         return [InstagramUserFollowingDifferenceSchema.model_validate(i) for i in body]
+
+    async def get_user_followers_following_difference(self, username: str) -> InstagramUserFollowDifferenceSchema:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get(f"/api/user/{username}/followers/following")
+            if resp.status != 200:
+                raise ValueError(await resp.text())
+            body = await resp.json()
+        return InstagramUserFollowDifferenceSchema.model_validate(body)
+
+    async def get_user_following_followers_difference(self, username: str) -> InstagramUserFollowDifferenceSchema:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get(f"/api/user/{username}/following/followers")
+            if resp.status != 200:
+                raise ValueError(await resp.text())
+            body = await resp.json()
+        return InstagramUserFollowDifferenceSchema.model_validate(body)
+
+    async def get_user_following_followers_collision(self, username: str) -> InstagramUserFollowDifferenceSchema:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get(f"/api/user/{username}/followers_following")
+            if resp.status != 200:
+                raise ValueError(await resp.text())
+            body = await resp.json()
+        return InstagramUserFollowDifferenceSchema.model_validate(body)
 
     async def get_user_followers(self, username: str) -> list[InstagramUserSchema]:
         raise DeprecationWarning("Deprecated function")
@@ -44,12 +93,16 @@ class InstagramRepository:
 
     async def get_user_stats(self, username: str) -> InstagramUserStatsSchema:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/user/" + username + "/stats", params={"days": 7})
+            resp = await session.get(
+                "/api/user/" + username + "/stats", params={"days": 7}
+            )
             assert resp.status == 200, await resp.text()
             body = await resp.json()
         return InstagramUserStatsSchema.model_validate(body)
 
-    async def get_user_media_info(self, username: str, max_id: str | None = None) -> InstagramMediaListSchema:
+    async def get_user_media_info(
+        self, username: str, max_id: str | None = None
+    ) -> InstagramMediaListSchema:
         params = {"username": username, "count": 10}
         if max_id is not None:
             params["max_id"] = max_id
@@ -67,17 +120,25 @@ class InstagramRepository:
             body = await resp.json()
         return InstagramMediaSchema.model_validate(body)
 
-    async def get_media_stats(self, media_id: str, days: int = 7) -> InstagramMediaStatsSchema:
+    async def get_media_stats(
+        self, media_id: str, days: int = 7
+    ) -> InstagramMediaStatsSchema:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/media/" + media_id + "/stats", params={"days": days})
+            resp = await session.get(
+                "/api/media/" + media_id + "/stats", params={"days": days}
+            )
             assert resp.status == 200, await resp.text()
             body = await resp.json()
         logger.debug(body)
         return InstagramMediaStatsSchema.model_validate(body)
 
-    async def get_media_user_stats(self, username: str, days: int = 7) -> InstagramMediaUserStatsSchema:
+    async def get_media_user_stats(
+        self, username: str, days: int = 7
+    ) -> InstagramMediaUserStatsSchema:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/media/stats", params={"days": days, "username": username})
+            resp = await session.get(
+                "/api/media/stats", params={"days": days, "username": username}
+            )
             assert resp.status == 200, await resp.text()
             body = await resp.json()
         return InstagramMediaUserStatsSchema.model_validate(body)

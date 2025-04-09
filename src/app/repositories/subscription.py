@@ -26,8 +26,8 @@ class SubscriptionRepository[Table: Subscription, int](BaseRepository):
     async def delete(self, model_id: int):
         await self._delete(model_id)
 
-    async def list(self, page=None, count=None) -> list[Subscription]:
-        return await self._get_list(page=page, count=count)
+    async def list(self, user_telegram_id: int | None = None, page=None, count=None) -> list[Subscription]:
+        return list(await self._get_list(user_telegram_id=user_telegram_id, page=page, count=count))
 
     async def count(self) -> int:
         return await self._count()

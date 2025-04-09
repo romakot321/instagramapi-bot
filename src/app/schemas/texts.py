@@ -1,3 +1,4 @@
+import mimetypes
 import re
 
 from app.schemas.instagram import (
@@ -100,6 +101,17 @@ _tracking_report_text = """
 ⭐️ Количество подписок: 🔼{tracking.following_count} ({change.following_count_difference})
 """
 
+_tracking_unsubscribe_text = """
+Вы отписались от пользователя [[{tracking_username}]]((https://instagram.com/{tracking_username})).
+**Чтобы подписаться на другого пользователя подождите месяц или купите доп. пакет.**.
+Вернуть подписку на пользователя {tracking_username} вы можете в любое время, пока подписка активна.
+"""
+
+
+def build_tracking_unsubscribe_text(tracking_username: str) -> str:
+    text = _tracking_unsubscribe_text.format(tracking_username=tracking_username)
+    return escape_markdown(text)
+
 
 def build_tracking_not_found_text(tracking_username: str) -> str:
     return _tracking_not_found_text.format(tracking_username=tracking_username)
@@ -173,12 +185,12 @@ def build_tracking_stats_text(
 
 
 def build_tracking_following_text(following: list[str]) -> str:
-    return escape_markdown("\n".join(
-        _tracking_follower_text.format(tracking=tracking) for tracking in following
-    ))
+    return build_tracking_followers_text(following)
 
 
 def build_tracking_followers_text(followers: list[str]) -> str:
+    if not followers:
+        return escape_markdown("Список пуст. Возможно, нужно подождать пока данные соберутся")
     return escape_markdown("\n".join(
         _tracking_follower_text.format(tracking=tracking) for tracking in followers
     ))
@@ -256,3 +268,16 @@ subscription_paywall_text = """
 
 def build_subscription_info_text(subscription: Subscription) -> str:
     return _subscription_info_text.format(subscription=subscription)
+
+
+def media_display_url_to_emoji(display_url: str | None) -> str:
+    if display_url is None:
+        return ""
+    media_type = mimetypes.guess_type(display_url)[0]
+    if media_type is None:
+        return ""
+    elif media_type.startswith("video/"):
+        return "🎥"
+    elif media_type.startswith("image/"):
+        return "📷"
+    return ""

@@ -19,12 +19,14 @@ from app.schemas.instagram import InstagramUserSchema
 from app.schemas.message import TextMessage
 from app.schemas.texts import (
     build_big_tracking_info_text,
+    build_tracking_followers_text,
     build_tracking_info_masked_text,
     build_tracking_info_text,
     build_tracking_not_found_text,
     build_tracking_private_text,
     build_tracking_report_text,
     build_tracking_stats_text,
+    build_tracking_unsubscribe_text,
 )
 from app.services.utils import build_aiogram_method
 
@@ -96,9 +98,14 @@ class TrackingService:
         )
         yield build_aiogram_method(msg.from_user.id, message)
 
-        info = await self.instagram_repository.get_user_info(username)
-
-        if not (
+        info = await self.instagram_repository.start_user_tracking(username)
+        if isinstance(info, str):  # Error occured
+            message = TextMessage(
+                text=info,
+                reply_markup=self.keyboard_repository.build_to_add_tracking_keyboard(),
+            )
+            yield build_aiogram_method(msg.from_user.id, message)
+        elif not (
             await self.subscription_repository.get_by_telegram_id(
                 msg.from_user.id, active=True
             )
@@ -114,37 +121,44 @@ class TrackingService:
     async def handle_tracking_subscribe(
         self, query: CallbackQuery, data: TrackingActionCallback
     ) -> TelegramMethod:
-        user_trackings_count = await self.tracking_repository.count(
-            creator_telegram_id=query.from_user.id
+        user_subscriptions = await self.subscription_repository.get_by_telegram_id(
+            query.from_user.id, active=True
         )
-        if user_trackings_count >= 1:
+        subscription_id = None
+        for subscription in user_subscriptions:
+            if subscription.tracking_username == data.username:
+                subscription_id = subscription.id
+                break
+            if subscription.tracking_username is None:
+                subscription_id = subscription.id
+
+        if subscription_id is None:
             message = TextMessage(
                 text="Вы достигли максимального количества отслеживаний",
                 reply_markup=self.keyboard_repository.build_to_trackings_max_buy_keyboard(
                     data.username
                 ),
             )
-            return build_aiogram_method(None, tg_object=query, message=message)
-
-        info = await self.instagram_repository.get_user_info(data.username)
-        if info.is_big():
+        elif (await self.instagram_repository.get_user_info(data.username)).is_big():
             message = TextMessage(
-                text="Для подписки необходимо оплатить доступ",
-                reply_markup=self.keyboard_repository.build_to_paywall_big_tracking_keyboard(
-                    data.username
-                ),
+                text="На этот аккаунт подписаться нельзя",
+                reply_markup=self.keyboard_repository.build_to_add_tracking_keyboard(),
             )
         else:
+            await self.subscription_repository.update(
+                subscription_id, tracking_username=data.username
+            )
             await self.tracking_repository.create(
                 instagram_username=data.username,
                 creator_telegram_id=query.from_user.id,
             )
             message = TextMessage(
-                text="Вы успешно подписались на пользователя @" + data.username,
+                text="Вы успешно подписались на пользователя " + data.username,
                 reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
                     data.username
                 ),
             )
+
         return build_aiogram_method(None, tg_object=query, message=message)
 
     async def handle_tracking_unsubscribe(
@@ -152,11 +166,11 @@ class TrackingService:
     ) -> TelegramMethod:
         await self.tracking_repository.delete(query.from_user.id, data.username)
         message = TextMessage(
-            text="Вы успешно отписались от пользователя @" + data.username,
+            text=build_tracking_unsubscribe_text(data.username),
             reply_markup=self.keyboard_repository.build_to_trackings_list_keyboard(),
-            message_id=query.message.message_id,
+            parse_mode="MarkdownV2",
         )
-        return build_aiogram_method(query.from_user.id, message, use_edit=True)
+        return build_aiogram_method(None, message=message, tg_object=query)
 
     def _handle_show_trackings_empty(
         self, tg_object: CallbackQuery | Message
@@ -208,14 +222,13 @@ class TrackingService:
         self,
         tg_object: CallbackQuery | Message,
         info: InstagramUserSchema,
-        subscribed: bool,
     ):
         message = TextMessage(
             text=build_big_tracking_info_text(info),
             reply_markup=self.keyboard_repository.build_tracking_keyboard(
-                info.username, subscribed
+                info.username, False
             ),
-            parse_mode="MarkdownV2"
+            parse_mode="MarkdownV2",
         )
         return build_aiogram_method(None, message=message, tg_object=tg_object)
 
@@ -236,19 +249,21 @@ class TrackingService:
                 tg_object.from_user.id, data.username, mute_not_found_exception=True
             )
         ) is not None
+
         info = await self.instagram_repository.get_user_info(data.username)
         if info is None:
             return self._handle_show_tracking_not_found(tg_object, data.username)
         if info.is_private:
             return self._handle_show_private_tracking(tg_object, info)
-        if info.is_big():
-            return self._handle_show_big_tracking(tg_object, info, subscribed)
+        if info.is_big() and not subscribed:
+            return self._handle_show_big_tracking(tg_object, info)
+
         message = TextMessage(
             text=build_tracking_info_text(info),
             reply_markup=self.keyboard_repository.build_tracking_keyboard(
                 data.username, subscribed
             ),
-            parse_mode="MarkdownV2"
+            parse_mode="MarkdownV2",
         )
         return build_aiogram_method(None, message=message, tg_object=tg_object)
 
@@ -261,7 +276,7 @@ class TrackingService:
         message = TextMessage(
             text=build_tracking_info_masked_text(info),
             reply_markup=self.keyboard_repository.build_tracking_show_full_keyboard(),
-            parse_mode="MarkdownV2"
+            parse_mode="MarkdownV2",
         )
         return build_aiogram_method(
             None,
@@ -281,14 +296,71 @@ class TrackingService:
             data.username, days=30
         )
         message = TextMessage(
-            text=build_tracking_stats_text(user_stats, weekly_media_stats, monthly_media_stats, user_info),
+            text=build_tracking_stats_text(
+                user_stats, weekly_media_stats, monthly_media_stats, user_info
+            ),
             reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
                 data.username
             ),
-            message_id=query.message.message_id,
             parse_mode="MarkdownV2",
         )
-        return build_aiogram_method(query.from_user.id, message, use_edit=True)
+        return build_aiogram_method(
+            None, message=message, tg_object=query, use_edit=True
+        )
+
+    async def handle_tracking_followers_following_collision(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> TelegramMethod:
+        info = await self.instagram_repository.get_user_following_followers_collision(
+            data.username
+        )
+        usernames = info.follow_usernames[(data.page - 1) * 10 : data.page * 10]
+        message = TextMessage(
+            text=build_tracking_followers_text(usernames),
+            reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
+                Action.tracking_followers_following_collision.action,
+                data.username,
+                len(usernames),
+                data.page,
+            ),
+        )
+        return build_aiogram_method(None, tg_object=query, message=message)
+
+    async def handle_tracking_followers_following_difference(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> TelegramMethod:
+        info = await self.instagram_repository.get_user_followers_following_difference(
+            data.username
+        )
+        usernames = info.follow_usernames[(data.page - 1) * 10 : data.page * 10]
+        message = TextMessage(
+            text=build_tracking_followers_text(usernames),
+            reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
+                Action.tracking_followers_following_difference.action,
+                data.username,
+                len(usernames),
+                data.page,
+            ),
+        )
+        return build_aiogram_method(None, tg_object=query, message=message)
+
+    async def handle_tracking_following_followers_difference(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> TelegramMethod:
+        info = await self.instagram_repository.get_user_following_followers_difference(
+            data.username
+        )
+        usernames = info.follow_usernames[(data.page - 1) * 10 : data.page * 10]
+        message = TextMessage(
+            text=build_tracking_followers_text(usernames),
+            reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
+                Action.tracking_following_followers_difference.action,
+                data.username,
+                len(usernames),
+                data.page,
+            ),
+        )
+        return build_aiogram_method(None, tg_object=query, message=message)
 
     async def handle_report_trackings(
         self, query: CallbackQuery

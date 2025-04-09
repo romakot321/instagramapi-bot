@@ -1,4 +1,5 @@
 from aiogram import types
+from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 import math
 import os
@@ -11,6 +12,7 @@ from app.schemas.action_callback import (
     TrackingActionCallback,
     TrackingMediaActionCallback,
 )
+from app.schemas.texts import media_display_url_to_emoji
 from db.tables import Tracking, TrackingMedia
 
 BOT_WEBHOOK_URL = os.getenv("BOT_WEBHOOK_URL", "")
@@ -122,6 +124,35 @@ class KeyboardRepository:
         )
         if subscribed:
             builder.button(
+                text=Action.tracking_followers_following_collision.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_followers_following_collision.action,
+                    username=username,
+                ).pack(),
+            )
+            builder.row(
+                types.InlineKeyboardButton(
+                    text=Action.tracking_followers_following_difference.text,
+                    callback_data=TrackingActionCallback(
+                        action=Action.tracking_followers_following_difference.action,
+                        username=username,
+                    ).pack(),
+                ),
+                types.InlineKeyboardButton(
+                    text=Action.tracking_following_followers_difference.text,
+                    callback_data=TrackingActionCallback(
+                        action=Action.tracking_following_followers_difference.action,
+                        username=username,
+                    ).pack(),
+                ),
+            )
+            builder.button(
+                text=Action.tracking_hidden_followers.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_hidden_followers.action, username=username
+                ).pack(),
+            )
+            builder.button(
                 text=Action.tracking_unsubscribe.text,
                 callback_data=TrackingActionCallback(
                     action=Action.tracking_unsubscribe.action, username=username
@@ -135,7 +166,9 @@ class KeyboardRepository:
                 ).pack(),
             )
         if subscribed:
-            builder.button(**Action.show_trackings.model_dump() | {"text": "Мои отслеживания"})
+            builder.button(
+                **Action.show_trackings.model_dump() | {"text": "Мои отслеживания"}
+            )
         builder.adjust(1)
         return builder.as_markup()
 
@@ -215,10 +248,13 @@ class KeyboardRepository:
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         for media in tracking_medias:
+            emoji = media_display_url_to_emoji(media.display_uri)
             builder.row(
                 types.InlineKeyboardButton(
-                    text=media.created_at.strftime("%d.%m.%Y %H:%M")
-                    + f"  {media.like_count} ❤️ {media.comment_count} 💬",
+                    text=emoji
+                        + " "
+                        + media.created_at.strftime("%d.%m.%Y %H:%M")
+                        + f"  {media.like_count} ❤️ {media.comment_count} 💬",
                     callback_data=TrackingMediaActionCallback(
                         action=Action.tracking_media_stats.action,
                         instagram_id=media.instagram_id,
@@ -351,6 +387,36 @@ class KeyboardRepository:
                 text=Action.delete_message.text,
                 callback_data=ActionCallback(
                     action=Action.delete_message.action
+                ).pack(),
+            )
+        )
+        return builder.as_markup()
+
+    def build_paginated_with_to_tracking_show(
+        self,
+        action: str,
+        tracking_username: str,
+        total_count: int,
+        current_page: int,
+        on_page_count: int = 10,
+    ):
+        builder = InlineKeyboardBuilder()
+        builder.row(
+            *self.paginate_row(
+                total_count,
+                current_page,
+                TrackingActionCallback(
+                    action=action,
+                    username=tracking_username,
+                ),
+                on_page_count,
+            )
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text="Назад",
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_show.action, username=tracking_username
                 ).pack(),
             )
         )
