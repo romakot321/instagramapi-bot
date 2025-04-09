@@ -52,7 +52,6 @@ class Tracking(BaseMixin, Base):
 
     creator_telegram_id: M[int] = column(ForeignKey("users.telegram_id", ondelete="CASCADE"), index=True)
     instagram_username: M[str] = column(index=True)
-    approved: M[bool] = column(server_default=false())
 
     creator: M['User'] = relationship(back_populates="trackings", lazy="selectin")
 
@@ -106,6 +105,7 @@ class Subscription(BaseMixin, Base):
 
     expire_at: M[dt.datetime]
     tariff_id: M[int] = column(ForeignKey("tariffs.id", ondelete="CASCADE"))
+    tracking_username: M[str | None]
     user_telegram_id: M[int] = column(ForeignKey("users.telegram_id", ondelete="CASCADE"))
     renewal_enabled: M[bool] = column(server_default=true())
 
