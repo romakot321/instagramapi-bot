@@ -3,6 +3,8 @@ import hashlib
 import hmac
 import base64
 import json
+import humanize
+import datetime as dt
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
@@ -13,6 +15,8 @@ from api.services.subscription import SubscriptionService
 
 router = APIRouter(tags=["Web"])
 templates = Jinja2Templates(directory="templates")
+
+templates.env.filters["humanize_seconds"] = lambda i: humanize.naturaldelta(dt.timedelta(seconds=i))
 
 
 @router.get("/paywall", response_class=HTMLResponse)
