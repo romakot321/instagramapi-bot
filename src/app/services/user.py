@@ -58,13 +58,14 @@ class UserService:
 
     async def _handle_main_menu_show(self, tg_object: Message | CallbackQuery):
         message = TextMessage(
-            text="Выберите действие",
+            text=start_text,
             reply_markup=self.keyboard_repository.build_main_keyboard(),
             message_id=(
                 tg_object.message.message_id
                 if isinstance(tg_object, CallbackQuery)
                 else None
             ),
+            parse_mode="MarkdownV2",
         )
         return build_aiogram_method(
             tg_object.from_user.id,

@@ -127,7 +127,7 @@ class KeyboardRepository:
             builder.button(
                 text="Отслеживать статистику раз в "
                 + humanize.naturaldelta(
-                    dt.timedelta(seconds=tariff.tracking_report_interval)
+                    dt.timedelta(seconds=int(tariff.tracking_report_interval))
                 ),
                 callback_data=SubscriptionActionCallback(
                     action=Action.tracking_report_interval.action,

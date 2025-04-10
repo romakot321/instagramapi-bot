@@ -145,11 +145,12 @@ class TrackingMediaService:
 
     async def handle_tracking_media_stats(self, query: CallbackQuery, data: TrackingMediaActionCallback) -> list[TelegramMethod]:
         methods = []
+        use_edit = True
 
         model = await self.tracking_media_repository.get_by_instagram_id(data.instagram_id)
         info = await self.instagram_repository.get_media_info(data.instagram_id)
         stats = await self.instagram_repository.get_media_stats(data.instagram_id)
-        if info.display_uri is None or mimetypes.guess_type(info.display_uri)[0] is None:
+        if info.display_uri is None:
             message = TextMessage(
                 text=build_media_stats_text(stats, model),
                 reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
@@ -160,7 +161,15 @@ class TrackingMediaService:
             message = MediaGroupMessage(
                 caption=build_media_stats_text(stats, model),
                 reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
-                files_=urls
+                files=urls,
+                parse_mode="MarkdownV2"
+            )
+            use_edit = False
+        elif mimetypes.guess_type(info.display_uri)[0] is None:
+            message = TextMessage(
+                text=build_media_stats_text(stats, model),
+                reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
+                parse_mode="MarkdownV2"
             )
         elif mimetypes.guess_type(info.display_uri)[0].startswith("video/"):
             message = VideoMessage(
@@ -183,7 +192,7 @@ class TrackingMediaService:
                 parse_mode="MarkdownV2"
             )
 
-        methods.append(build_aiogram_method(None, message=message, tg_object=query))
+        methods.append(build_aiogram_method(None, message=message, tg_object=query, use_edit=use_edit))
 
         return methods
 

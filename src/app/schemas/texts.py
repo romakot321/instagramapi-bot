@@ -1,4 +1,6 @@
 import mimetypes
+import datetime as dt
+import humanize
 import re
 
 from api.services import tracking
@@ -53,7 +55,7 @@ _tracking_info_text = """
 🧑‍💻  Подписчиков: {schema.followers_count}
 ⭐️  Подписок: {schema.following_count}
 🖼  Постов: {schema.media_count}
-ℹ️  Описание: {schema.biography}
+ℹ️  Описание: {biography}
 """
 
 _tracking_info_masked_text = """
@@ -116,12 +118,13 @@ _tracking_unsubscribe_text = """
 
 _tracking_subscribe_text = """
 Вы успешно подписались на пользователя [[{tracking_username}]]((https://instagram.com/{tracking_username})).
-Вам будет приходить статистика раз в 24 часа, но вы можете настроить периодичность сбора статистики и отправки отчетов
+Вам будет приходить статистика раз в {report_interval}, но вы можете настроить периодичность сбора статистики и отправки отчетов
 """
 
 
-def build_tracking_subscribe_text(tracking_username: str) -> str:
-    text = _tracking_subscribe_text.format(tracking_username=tracking_username)
+def build_tracking_subscribe_text(tracking_username: str, report_interval: int) -> str:
+    report_interval = humanize.naturaldelta(dt.timedelta(seconds=int(report_interval)))
+    text = _tracking_subscribe_text.format(tracking_username=tracking_username, report_interval=report_interval)
     return escape_markdown(text)
 
 
@@ -146,7 +149,8 @@ def build_big_tracking_info_text(schema: InstagramUserSchema) -> str:
 
 
 def build_tracking_info_text(schema: InstagramUserSchema) -> str:
-    return escape_markdown(_tracking_info_text.format(schema=schema))
+    biography = descape_markdown(schema.biography if schema.biography else "")
+    return escape_markdown(_tracking_info_text.format(schema=schema, biography=biography))
 
 
 def build_tracking_info_masked_text(schema: InstagramUserSchema) -> str:

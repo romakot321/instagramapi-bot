@@ -159,7 +159,7 @@ class TrackingService:
                 creator_telegram_id=query.from_user.id,
             )
             message = TextMessage(
-                text=build_tracking_subscribe_text(data.username),
+                text=build_tracking_subscribe_text(data.username, int(subscription.tariff.tracking_report_interval)),
                 reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
                     data.username
                 ),
