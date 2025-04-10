@@ -142,6 +142,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "fastapi-utils" },
     { name = "gunicorn" },
+    { name = "humanize" },
     { name = "jinja2" },
     { name = "sqlalchemy" },
     { name = "sqlalchemy-service" },
@@ -165,6 +166,7 @@ requires-dist = [
     { name = "fastapi", specifier = "==0.115.*" },
     { name = "fastapi-utils", specifier = ">=0.8.0" },
     { name = "gunicorn", specifier = "==23.0.*" },
+    { name = "humanize" },
     { name = "jinja2", specifier = "==3.1.*" },
     { name = "sqlalchemy", specifier = "==2.0.*" },
     { name = "sqlalchemy-service", specifier = "==1.0.9" },
@@ -369,6 +371,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f5/38/3af3d3633a34a3316095b39c8e8fb4853a28a536e55d347bd8d8e9a14b03/h11-0.14.0.tar.gz", hash = "sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d", size = 100418 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/95/04/ff642e65ad6b90db43e668d70ffb6736436c7ce41fcc549f4e9472234127/h11-0.14.0-py3-none-any.whl", hash = "sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761", size = 58259 },
+]
+
+[[package]]
+name = "humanize"
+version = "4.12.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e0/84/ae8e64a6ffe3291105e9688f4e28fa65eba7924e0fe6053d85ca00556385/humanize-4.12.2.tar.gz", hash = "sha256:ce0715740e9caacc982bb89098182cf8ded3552693a433311c6a4ce6f4e12a2c", size = 80871 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/c7/6f89082f619c76165feb633446bd0fee32b0e0cbad00d22480e5aea26ade/humanize-4.12.2-py3-none-any.whl", hash = "sha256:e4e44dced598b7e03487f3b1c6fd5b1146c30ea55a110e71d5d4bca3e094259e", size = 128305 },
 ]
 
 [[package]]
