@@ -11,6 +11,12 @@ from app.schemas.instagram import (
 from db.tables import Subscription, TrackingMedia
 
 
+def descape_markdown(text: str) -> str:
+    for i in "_*[]()~`>#+-=|{}.!":
+        text = text.replace(i, f"\\{i}{i}")
+    return text
+
+
 def escape_markdown(text: str) -> str:
     escape_chars = r"_*[]()~`>#+-=|{}.!"
     ret = re.sub(r"([{}])".format(re.escape(escape_chars)), r"\\\1", text)
@@ -191,9 +197,10 @@ def build_tracking_following_text(following: list[str]) -> str:
 def build_tracking_followers_text(followers: list[str]) -> str:
     if not followers:
         return escape_markdown("Список пуст. Возможно, нужно подождать пока данные соберутся")
-    return escape_markdown("\n".join(
-        _tracking_follower_text.format(tracking=tracking) for tracking in followers
-    ))
+    return "\n".join(
+        f"[{tracking}](https://instagram.com/{tracking})"
+        for tracking in map(lambda i: escape_markdown(i), followers)
+    )
 
 
 def build_tracking_report_text(
@@ -218,7 +225,8 @@ def build_tracking_report_text(
 
 
 _media_stats_video_text = """
-{media.caption_text}
+>> {caption_text}
+
 Текущая статистика:
 - Комментариев: {stats.comment_count_current}
 - Лайков: {stats.like_count_current}
@@ -231,7 +239,8 @@ _media_stats_video_text = """
 """
 
 _media_stats_text = """
-{media.caption_text}
+>> {caption_text}
+
 Текущая статистика:
 - Комментариев: {stats.comment_count_current}
 - Лайков: {stats.like_count_current}
@@ -241,13 +250,16 @@ _media_stats_text = """
 - Лайков: {stats.like_count_difference}
 """
 
-
 def build_media_stats_text(
     stats: InstagramMediaStatsSchema, media: TrackingMedia
 ) -> str:
+    caption_text = descape_markdown(media.caption_text).replace("\n", "\n>> ")
+    total_length = len(escape_markdown(_media_stats_video_text.format(caption_text=caption_text, media=media, stats=stats)))
+    if total_length > 1024:
+        caption_text = caption_text[:-(total_length - 1024)]
     if stats.play_count_current is not None:
-        return _media_stats_video_text.format(media=media, stats=stats)
-    return _media_stats_text.format(media=media, stats=stats)
+        return escape_markdown(_media_stats_video_text.format(caption_text=caption_text, media=media, stats=stats))
+    return escape_markdown(_media_stats_text.format(media=media, stats=stats, caption_text=caption_text))
 
 
 _subscription_info_text = """

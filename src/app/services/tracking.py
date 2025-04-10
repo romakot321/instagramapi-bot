@@ -66,7 +66,7 @@ class TrackingService:
         )
 
     def _extract_username(self, user_input: str) -> str | None:
-        user_input = user_input.lstrip("@")
+        user_input = user_input.lower().lstrip("@")
         url = urlparse(user_input)
         if url.netloc == "":
             return user_input
@@ -320,9 +320,10 @@ class TrackingService:
             reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
                 Action.tracking_followers_following_collision.action,
                 data.username,
-                len(usernames),
+                len(info.follow_usernames),
                 data.page,
             ),
+            parse_mode="MarkdownV2"
         )
         return build_aiogram_method(None, tg_object=query, message=message)
 
@@ -338,9 +339,10 @@ class TrackingService:
             reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
                 Action.tracking_followers_following_difference.action,
                 data.username,
-                len(usernames),
+                len(info.follow_usernames),
                 data.page,
             ),
+            parse_mode="MarkdownV2"
         )
         return build_aiogram_method(None, tg_object=query, message=message)
 
@@ -356,9 +358,10 @@ class TrackingService:
             reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
                 Action.tracking_following_followers_difference.action,
                 data.username,
-                len(usernames),
+                len(info.follow_usernames),
                 data.page,
             ),
+            parse_mode="MarkdownV2"
         )
         return build_aiogram_method(None, tg_object=query, message=message)
 

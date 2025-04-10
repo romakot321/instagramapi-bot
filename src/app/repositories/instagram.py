@@ -20,7 +20,7 @@ class InstagramRepository:
 
     async def start_user_tracking(self, username: str) -> InstagramUserSchema | str:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/user", params={"username": username})
+            resp = await session.post("/api/user", json={"instagram_username": username})
             if resp.status in (200, 201):
                 return InstagramUserSchema.model_validate(await resp.json())
             elif resp.status == 404:
