@@ -16,7 +16,7 @@ from api.services.subscription import SubscriptionService
 router = APIRouter(tags=["Web"])
 templates = Jinja2Templates(directory="templates")
 
-templates.env.filters["humanize_seconds"] = lambda i: humanize.naturaldelta(dt.timedelta(seconds=i))
+templates.env.filters["humanize_seconds"] = lambda i: humanize.naturaldelta(dt.timedelta(seconds=int(i)))
 
 
 @router.get("/paywall", response_class=HTMLResponse)

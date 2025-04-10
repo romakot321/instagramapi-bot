@@ -66,7 +66,7 @@
             <div class="price-row d-flex justify-content-between align-items-center" data-tariff="{{ tariff.id }}" onclick="selectPrice(this)">
                 <label>
                     <input type="radio" name="price">
-                    <span class="ms-2">{{ tariff.payment_amount }} руб. / месяц, отчет раз в {{ tariff.tracking_report_interval|humanize_interval }}</span>
+                    <span class="ms-2">{{ tariff.payment_amount }} руб. / месяц, отчет раз в {{ tariff.tracking_report_interval|humanize_seconds }}</span>
                 </label>
             </div>
             {% endfor %}

@@ -265,10 +265,13 @@ _media_stats_text = """
 def build_media_stats_text(
     stats: InstagramMediaStatsSchema, media: TrackingMedia
 ) -> str:
-    caption_text = descape_markdown(media.caption_text).replace("\n", "\n>> ")
-    total_length = len(escape_markdown(_media_stats_video_text.format(caption_text=caption_text, media=media, stats=stats)))
-    if total_length > 1024:
-        caption_text = caption_text[:-(total_length - 1024)]
+    if media.caption_text:
+        caption_text = descape_markdown(media.caption_text).replace("\n", "\n>> ")
+        total_length = len(escape_markdown(_media_stats_video_text.format(caption_text=caption_text, media=media, stats=stats)))
+        if total_length > 1024:
+            caption_text = caption_text[:-(total_length - 1024)]
+    else:
+        caption_text = ""
     if stats.play_count_current is not None:
         return escape_markdown(_media_stats_video_text.format(caption_text=caption_text, media=media, stats=stats))
     return escape_markdown(_media_stats_text.format(media=media, stats=stats, caption_text=caption_text))
@@ -299,6 +302,8 @@ def build_subscription_info_text(subscription: Subscription) -> str:
 def media_display_url_to_emoji(display_url: str | None) -> str:
     if display_url is None:
         return ""
+    if display_url.startswith("[") and display_url.endswith("]"):
+        return "🎞"
     media_type = mimetypes.guess_type(display_url)[0]
     if media_type is None:
         return ""
