@@ -52,9 +52,7 @@ async def add_tracking_callback(
     await bot(method)
 
 
-@router.message(
-    TrackingCreateForm.typing_username, F.text
-)
+@router.message(F.text)
 async def tracking_create(
     message: Message,
     state: FSMContext,

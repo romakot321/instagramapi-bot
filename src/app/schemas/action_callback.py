@@ -44,6 +44,7 @@ class Action(Enum):
     tracking_media_display = ButtonData(action="media_display", text="Посмотреть")
 
     subscription_add = ButtonData(action="subscription_add", text="Приобрести подписку")
+    subscription_created = ButtonData(action="subscription_created", text=None)
     subscription_cancel = ButtonData(action="subscription_cancel", text="Отменить автопродление")
     subscription_add_trackings = ButtonData(action="subscription_add_trackings", text="Купить отслеживания")
 
@@ -82,8 +83,9 @@ class TrackingActionCallback(PaginatedActionCallback, prefix="t_action"):
     username: str
 
 
-class TrackingMediaActionCallback(PaginatedActionCallback, prefix="media_action"):
+class TrackingMediaActionCallback(PaginatedActionCallback, prefix="m_action"):
     instagram_id: str
+    media_page: int = 1
 
 
 class SubscriptionActionCallback(ActionCallback, prefix="s_action"):

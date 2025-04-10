@@ -17,7 +17,7 @@ class UserService[Table: User, int](BaseService):
         return await self._create(**fields)
 
     async def list(self, page=None, count=None) -> list[User]:
-        return list(await self._get_list(page=page, count=count))
+        return list(await self._get_list(page=page, count=count, select_in_load=User.trackings))
 
     async def get(self, model_id: int) -> User:
         return await self._get_one(

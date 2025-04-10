@@ -80,23 +80,24 @@ async def tracking_report_interval(
 
 
 @router.callback_query(
-    ActionCallback.filter(F.action == Action.subscription_add.action)
+    SubscriptionActionCallback.filter(F.action == Action.subscription_add.action)
 )
 async def subscription_add(
     query: CallbackQuery,
+    callback_data: SubscriptionActionCallback,
     bot: Bot,
     subscription_service: Annotated[
         SubscriptionService, Depends(SubscriptionService.init)
     ],
 ):
-    method = await subscription_service.handle_subscription_add(query)
+    method = await subscription_service.handle_subscription_add(query, callback_data)
     await bot(method)
 
 
 @router.callback_query(
-    SubscriptionActionCallback.filter(F.action == Action.subscription_add.action)
+    SubscriptionActionCallback.filter(F.action == Action.subscription_created.action)
 )
-async def subscription_add_created(
+async def subscription_created(
     query: CallbackQuery,
     callback_data: SubscriptionActionCallback,
     bot: Bot,

@@ -75,7 +75,7 @@ class SubscriptionService:
         return await self._handle_subscription_menu_show(query, subscriptions)
 
     async def handle_subscription_add(
-        self, tg_object: CallbackQuery | Message
+        self, tg_object: CallbackQuery | Message, data: SubscriptionActionCallback
     ) -> TelegramMethod:
         message = TextMessage(
             text=subscription_paywall_text,

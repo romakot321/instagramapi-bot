@@ -44,12 +44,11 @@ def register_cors(application):
     )
 
 
-@repeat_every(seconds=3600, wait_first=1)
+@repeat_every(seconds=3600 * 2, wait_first=3600 * 2)
 async def send_reports():
-    if dt.datetime.now(tz=dt.UTC).hour != 19:
-        return
     async with UserService() as user_service:
         users = await user_service.list(count=10000000)
+    now = dt.datetime.now()
     for user in users:
         await BotController.send_reports(user.telegram_id)
         await asyncio.sleep(0.3)  # Rate-limit

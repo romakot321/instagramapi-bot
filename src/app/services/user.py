@@ -1,5 +1,6 @@
 import types
 from typing import Annotated
+from urllib import parse
 
 from aiogram3_di import Depends
 
@@ -60,18 +61,9 @@ class UserService:
         message = TextMessage(
             text=start_text,
             reply_markup=self.keyboard_repository.build_main_keyboard(),
-            message_id=(
-                tg_object.message.message_id
-                if isinstance(tg_object, CallbackQuery)
-                else None
-            ),
-            parse_mode="MarkdownV2",
+            parse_mode="MarkdownV2"
         )
-        return build_aiogram_method(
-            tg_object.from_user.id,
-            message,
-            use_edit=isinstance(tg_object, CallbackQuery),
-        )
+        return build_aiogram_method(None, tg_object=tg_object, message=message)
 
     async def handle_user_start(self, tg_object: Message | CallbackQuery):
         if (

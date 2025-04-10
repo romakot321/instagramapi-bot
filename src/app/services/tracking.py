@@ -296,7 +296,7 @@ class TrackingService:
             return self._handle_show_tracking_not_found(tg_object, data.username)
         message = TextMessage(
             text=build_tracking_info_masked_text(info),
-            reply_markup=self.keyboard_repository.build_tracking_show_full_keyboard(),
+            reply_markup=self.keyboard_repository.build_tracking_show_full_keyboard(data.username),
             parse_mode="MarkdownV2",
         )
         return build_aiogram_method(
