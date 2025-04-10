@@ -73,7 +73,7 @@
         </div>
 
         <div class="mt-4 text-center">
-        <button onclick="getAccess(event)" class="btn btn-primary btn-lg px-5">Получить доступ</button>
+            <button onclick="getAccess(event)" class="btn btn-primary btn-lg px-5">Получить доступ</button>
         </div>
 
         <p class="small text-muted text-center mt-3">
@@ -101,14 +101,17 @@
     }
 
     function pay(tariffId, userTelegramId) {
-        console.log(tariffId, userTelegramId);
+        {% if not tracking_username is none %}
+            let trackingUsername = '{{ tracking_username }}';
+        {% else %}
+            let trackingUsername = null;
+        {% endif %}
 
         fetch("/api/subscription", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({tariff_id: +tariffId, user_telegram_id: +userTelegramId})
+            body: JSON.stringify({tariff_id: +tariffId, user_telegram_id: +userTelegramId, tracking_username: trackingUsername})
         })
-            .then(response => response.json())
             .then(response => window.Telegram.WebApp.close())
             .catch(err => console.error(err));
     }

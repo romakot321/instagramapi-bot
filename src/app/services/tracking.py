@@ -163,6 +163,7 @@ class TrackingService:
                 reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
                     data.username
                 ),
+                parse_mode="MarkdownV2"
             )
 
         return build_aiogram_method(None, tg_object=query, message=message)

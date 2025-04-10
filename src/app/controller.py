@@ -47,8 +47,10 @@ class BotController:
         return json.dumps(webhookdata)
 
     @classmethod
-    async def send_subscription_created(cls, user_telegram_id: int):
-        data = SubscriptionActionCallback(action=Action.subscription_add.action, ig_u="", t_id=-1).pack()
+    async def send_subscription_created(cls, user_telegram_id: int, tracking_username: str | None):
+        if tracking_username is None:
+            tracking_username = ""
+        data = SubscriptionActionCallback(action=Action.subscription_add.action, ig_u=tracking_username, t_id=-1).pack()
         webhook_data = cls._pack_webhook_data(user_telegram_id, data)
 
         asyncio.create_task(
