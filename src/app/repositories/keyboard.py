@@ -114,7 +114,7 @@ class KeyboardRepository:
         builder = InlineKeyboardBuilder()
         for tariff in tarrifs:
             builder.button(
-                text="Отслеживать статистику раз в " + humanize.naturaldelta(dt.timedelta(seconds=tariff.tracking_report_interval)),
+                text="Отслеживать статистику раз в " + humanize.naturaldelta(dt.timedelta(seconds=int(tariff.tracking_report_interval))),
                 callback_data=SubscriptionActionCallback(
                     action=Action.tracking_report_interval.action,
                     ig_u=username,
