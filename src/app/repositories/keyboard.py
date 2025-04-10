@@ -1,6 +1,8 @@
 from aiogram import types
 from aiogram.types.inline_keyboard_button import InlineKeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+import humanize
+import datetime as dt
 import math
 import os
 from urllib.parse import urlparse
@@ -9,13 +11,15 @@ from app.schemas.action_callback import (
     Action,
     ActionCallback,
     PaginatedActionCallback,
+    SubscriptionActionCallback,
     TrackingActionCallback,
     TrackingMediaActionCallback,
 )
 from app.schemas.texts import media_display_url_to_emoji
-from db.tables import Tracking, TrackingMedia
+from db.tables import Tariff, Tracking, TrackingMedia
 
 BOT_WEBHOOK_URL = os.getenv("BOT_WEBHOOK_URL", "")
+humanize.i18n.activate("RU_ru")
 
 
 class KeyboardRepository:
@@ -106,6 +110,27 @@ class KeyboardRepository:
         builder.adjust(1)
         return builder.as_markup()
 
+    def build_tracking_settings_keyboard(self, username: str, tarrifs: list[Tariff]) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        for tariff in tarrifs:
+            builder.button(
+                text="Отслеживать статистику раз в " + humanize.naturaldelta(dt.timedelta(seconds=tariff.tracking_report_interval)),
+                callback_data=SubscriptionActionCallback(
+                    action=Action.tracking_report_interval.action,
+                    ig_u=username,
+                    t_id=tariff.id
+                )
+            )
+        builder.button(
+            text="Назад",
+            callback_data=TrackingActionCallback(
+                action=Action.tracking_show.action,
+                username=username
+            )
+        )
+        builder.adjust(1)
+        return builder.as_markup()
+
     def build_tracking_keyboard(
         self, username: str, subscribed: bool
     ) -> types.InlineKeyboardMarkup:
@@ -116,13 +141,13 @@ class KeyboardRepository:
                 action=Action.tracking_stats.action, username=username
             ).pack(),
         )
-        builder.button(
-            text=Action.show_tracking_media.text,
-            callback_data=TrackingActionCallback(
-                action=Action.show_tracking_media.action, username=username
-            ).pack(),
-        )
         if subscribed:
+            builder.button(
+                text=Action.show_tracking_media.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.show_tracking_media.action, username=username
+                ).pack(),
+            )
             builder.button(
                 text=Action.tracking_followers_following_collision.text,
                 callback_data=TrackingActionCallback(
@@ -153,6 +178,12 @@ class KeyboardRepository:
                 ).pack(),
             )
             builder.button(
+                text=Action.tracking_settings.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_settings.action, username=username
+                ).pack(),
+            )
+            builder.button(
                 text=Action.tracking_unsubscribe.text,
                 callback_data=TrackingActionCallback(
                     action=Action.tracking_unsubscribe.action, username=username
@@ -164,10 +195,6 @@ class KeyboardRepository:
                 callback_data=TrackingActionCallback(
                     action=Action.tracking_subscribe.action, username=username
                 ).pack(),
-            )
-        if subscribed:
-            builder.button(
-                **Action.show_trackings.model_dump() | {"text": "Мои отслеживания"}
             )
         builder.adjust(1)
         return builder.as_markup()

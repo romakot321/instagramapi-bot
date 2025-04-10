@@ -1,12 +1,13 @@
-from fastapi import Response
+from fastapi import HTTPException, Response
 import datetime as dt
 from loguru import logger
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_service import BaseService
 
 from api.schemas.subscription import SubscriptionCreateSchema
 from app.controller import BotController
-from db.tables import Subscription
+from db.tables import Subscription, Tariff
 from db import engine
 
 
@@ -16,18 +17,25 @@ class SubscriptionService[Table: Subscription, int](BaseService):
     session: AsyncSession
     response: Response
 
-    tariffs = [{"id": 0, "price": 200, "access_days": 30, "text": "200 руб. за месяц"}]
     tariffs_big_tracking = [{"id": 0, "price": 590, "access_days": 30, "text": "1 отчет в день за 590 руб."}]
 
-    async def get_tariffs_list(self) -> list:
-        return self.tariffs
+    async def get_tariffs_list(self) -> list[Tariff]:
+        query = select(Tariff)
+        return list(await self.session.scalars(query))
 
     async def get_tariffs_big_tracking_list(self) -> list:
         return self.tariffs_big_tracking
 
+    async def get_tariff(self, tariff_id: int) -> Tariff:
+        query = select(Tariff).filter_by(id=tariff_id)
+        model = await self.session.scalar(query)
+        if model is None:
+            raise HTTPException(404)
+        return model
+
     async def create(self, schema: SubscriptionCreateSchema) -> Subscription:
-        tariff = self.tariffs[schema.tariff_id]
-        expire_at = dt.datetime.now() + dt.timedelta(days=tariff["access_days"])
+        tariff = await self.get_tariff(schema.tariff_id)
+        expire_at = dt.datetime.now() + dt.timedelta(days=tariff.access_days)
         model = await self._create(
             user_telegram_id=schema.user_telegram_id,
             expire_at=expire_at,

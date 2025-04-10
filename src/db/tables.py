@@ -79,8 +79,7 @@ class Tariff(BaseMixin, Base):
 
     payment_amount: M[int] = column(unique=True)
     access_days: M[int]
-    payment_interval: M[str] = column(doc="Month, Week, Day")
-    payment_period: M[int]
+    tracking_report_interval: M[str] = column(doc="В секундах")
 
     subscriptions: M[list["Subscription"]] = relationship(
         back_populates="tariff", lazy="selectin"

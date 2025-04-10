@@ -4,7 +4,7 @@ from loguru import logger
 from aiogram import F
 from aiogram import Router
 from aiogram import Bot
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
@@ -15,6 +15,17 @@ from app.schemas.forms import TrackingCreateForm
 from app.services.tracking import TrackingService
 
 router = Router(name=__name__)
+
+
+@router.message(Command("report"))
+async def get_user_reports(
+    message: Message,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)]
+):
+    logger.debug("Sending reports to " + str(message.from_user.id))
+    async for method in tracking_service.handle_report_trackings(message):
+        await bot(method)
 
 
 @router.message(
@@ -160,6 +171,21 @@ async def tracking_followers_following_collision(
 
 
 @router.callback_query(
+    TrackingActionCallback.filter(
+        F.action == Action.tracking_settings.action
+    )
+)
+async def tracking_settings(
+    callback_query: CallbackQuery,
+    callback_data: TrackingActionCallback,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)]
+):
+    method = await tracking_service.handle_settings(callback_query, callback_data)
+    await bot(method)
+
+
+@router.callback_query(
     ActionCallback.filter(
         F.action == Action.report_trackings.action
     )
@@ -170,6 +196,5 @@ async def report_trackings(
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
     logger.debug("Sending reports to " + str(callback_query.from_user.id))
-    methods = await tracking_service.handle_report_trackings(callback_query)
-    for method in methods:
+    async for method in tracking_service.handle_report_trackings(callback_query):
         await bot(method)

@@ -1,6 +1,7 @@
 import mimetypes
 import re
 
+from api.services import tracking
 from app.schemas.instagram import (
     InstagramMediaSchema,
     InstagramMediaStatsSchema,
@@ -106,6 +107,16 @@ _tracking_unsubscribe_text = """
 **Чтобы подписаться на другого пользователя подождите месяц или купите доп. пакет.**.
 Вернуть подписку на пользователя {tracking_username} вы можете в любое время, пока подписка активна.
 """
+
+_tracking_subscribe_text = """
+Вы успешно подписались на пользователя [[{tracking_username}]]((https://instagram.com/{tracking_username})).
+Вам будет приходить статистика раз в 24 часа, но вы можете настроить периодичность сбора статистики и отправки отчетов
+"""
+
+
+def build_tracking_subscribe_text(tracking_username: str) -> str:
+    text = _tracking_subscribe_text.format(tracking_username=tracking_username)
+    return escape_markdown(text)
 
 
 def build_tracking_unsubscribe_text(tracking_username: str) -> str:

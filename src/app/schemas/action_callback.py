@@ -36,6 +36,8 @@ class Action(Enum):
     tracking_top_followers = ButtonData(action="t_top_folws", text="Самые активные подписчики")
     tracking_stats = ButtonData(action="t_stats", text="📊Посмотреть полную статистику пользователя")
     tracking_show = ButtonData(action="t_show", text=None)
+    tracking_settings = ButtonData(action="t_settings", text="Настройки")
+    tracking_report_interval = ButtonData(action="t_rep_interval", text=None)
     show_tracking_media = ButtonData(action="media", text="Публикации")
 
     tracking_media_stats = ButtonData(action="media_stats", text="Статистика")
@@ -84,5 +86,6 @@ class TrackingMediaActionCallback(PaginatedActionCallback, prefix="media_action"
     instagram_id: str
 
 
-class SubscriptionActionCallback(ActionCallback, prefix="subscription_action"):
-    pass
+class SubscriptionActionCallback(ActionCallback, prefix="s_action"):
+    ig_u: str  # Instagram username
+    t_id: int  # Tariff id

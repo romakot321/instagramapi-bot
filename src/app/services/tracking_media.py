@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 import mimetypes
 from loguru import logger
 from typing import Annotated, AsyncGenerator
@@ -16,7 +17,7 @@ from app.repositories.instagram import InstagramRepository
 from app.repositories.keyboard import KeyboardRepository
 from app.repositories.tracking_media import TrackingMediaRepository
 from app.schemas.action_callback import Action, TrackingActionCallback, TrackingMediaActionCallback
-from app.schemas.message import MediaMessage, PhotoMessage, TextMessage, VideoMessage
+from app.schemas.message import MediaGroupMessage, MediaMessage, PhotoMessage, TextMessage, VideoMessage
 from app.schemas.texts import build_media_stats_text
 from app.services.utils import build_aiogram_method
 from db.tables import TrackingMedia
@@ -132,7 +133,7 @@ class TrackingMediaService:
         else:
             models, total_count = medias
         message = TextMessage(
-            text="Публикации пользователя @" + data.username,
+            text="Публикации пользователя " + data.username,
             reply_markup=self.keyboard_repository.build_tracking_medias_list_keyboard(models, data.page, total_count),
             message_id=query.message.message_id
         )
@@ -148,6 +149,13 @@ class TrackingMediaService:
             message = TextMessage(
                 text=build_media_stats_text(stats, model),
                 reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
+            )
+        elif info.display_uri.startswith("[") and info.display_uri.endswith("]"):
+            urls = json.loads(info.display_uri)
+            message = MediaGroupMessage(
+                caption=build_media_stats_text(stats, model),
+                reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
+                files_=urls
             )
         elif mimetypes.guess_type(info.display_uri)[0].startswith("video/"):
             message = VideoMessage(

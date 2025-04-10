@@ -48,7 +48,7 @@ class BotController:
 
     @classmethod
     async def send_subscription_created(cls, user_telegram_id: int):
-        data = SubscriptionActionCallback(action=Action.subscription_add.action).pack()
+        data = SubscriptionActionCallback(action=Action.subscription_add.action, ig_u="", t_id=-1).pack()
         webhook_data = cls._pack_webhook_data(user_telegram_id, data)
 
         asyncio.create_task(

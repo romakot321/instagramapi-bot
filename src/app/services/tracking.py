@@ -12,6 +12,7 @@ from aiogram.methods import TelegramMethod
 from app.repositories.instagram import InstagramRepository
 from app.repositories.keyboard import KeyboardRepository
 from app.repositories.subscription import SubscriptionRepository
+from app.repositories.tariff import TariffRepository
 from app.repositories.tracking import TrackingRepository
 from app.schemas.action_callback import Action, TrackingActionCallback
 from app.schemas.forms import TrackingCreateForm
@@ -26,6 +27,7 @@ from app.schemas.texts import (
     build_tracking_private_text,
     build_tracking_report_text,
     build_tracking_stats_text,
+    build_tracking_subscribe_text,
     build_tracking_unsubscribe_text,
 )
 from app.services.utils import build_aiogram_method
@@ -38,11 +40,13 @@ class TrackingService:
         instagram_repository: InstagramRepository,
         keyboard_repository: KeyboardRepository,
         subscription_repository: SubscriptionRepository,
+        tariff_repository: TariffRepository,
     ):
         self.tracking_repository = tracking_repository
         self.instagram_repository = instagram_repository
         self.keyboard_repository = keyboard_repository
         self.subscription_repository = subscription_repository
+        self.tariff_repository = tariff_repository
 
     @classmethod
     def init(
@@ -57,12 +61,14 @@ class TrackingService:
         subscription_repository: Annotated[
             SubscriptionRepository, Depends(SubscriptionRepository.init)
         ],
+        tariff_repository: Annotated[TariffRepository, Depends(TariffRepository.init)],
     ):
         return cls(
             tracking_repository=tracking_repository,
             instagram_repository=instagram_repository,
             keyboard_repository=keyboard_repository,
             subscription_repository=subscription_repository,
+            tariff_repository=tariff_repository,
         )
 
     def _extract_username(self, user_input: str) -> str | None:
@@ -153,7 +159,7 @@ class TrackingService:
                 creator_telegram_id=query.from_user.id,
             )
             message = TextMessage(
-                text="Вы успешно подписались на пользователя " + data.username,
+                text=build_tracking_subscribe_text(data.username),
                 reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
                     data.username
                 ),
@@ -197,6 +203,20 @@ class TrackingService:
             ),
         )
         return build_aiogram_method(None, message=message, tg_object=tg_object)
+
+    async def handle_settings(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> TelegramMethod:
+        tariffs = await self.tariff_repository.list()
+        subscription = await self.subscription_repository.get(
+            user_telegram_id=query.from_user.id, tracking_username=data.username
+        )
+        tariffs = [t for t in tariffs if t.id != subscription.tariff_id]
+        message = TextMessage(
+            text="Настройки отслеживания пользователя " + data.username,
+            reply_markup=self.keyboard_repository.build_tracking_settings_keyboard(data.username, tariffs)
+        )
+        return build_aiogram_method(None, tg_object=query, message=message)
 
     async def handle_show(
         self, query: CallbackQuery, data: TrackingActionCallback
@@ -363,11 +383,10 @@ class TrackingService:
         return build_aiogram_method(None, tg_object=query, message=message)
 
     async def handle_report_trackings(
-        self, query: CallbackQuery
-    ) -> list[TelegramMethod]:
-        methods = []
+        self, tg_object: CallbackQuery | Message
+    ) -> AsyncGenerator[TelegramMethod]:
         for tracking in await self.tracking_repository.list(
-            creator_telegram_id=query.from_user.id
+            creator_telegram_id=tg_object.from_user.id
         ):
             user_info = await self.instagram_repository.get_user_info(
                 tracking.instagram_username
@@ -383,6 +402,6 @@ class TrackingService:
                 reply_markup=self.keyboard_repository.build_tracking_report_keyboard(
                     tracking.instagram_username
                 ),
+                parse_mode="MarkdownV2",
             )
-            methods.append(build_aiogram_method(query.from_user.id, message))
-        return methods
+            yield build_aiogram_method(tg_object.from_user.id, message)

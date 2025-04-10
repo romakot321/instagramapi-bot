@@ -11,8 +11,8 @@ class SubscriptionRepository[Table: Subscription, int](BaseRepository):
     async def create(self, **kwargs) -> Subscription:
         return await self._create(**kwargs)
 
-    async def get(self, model_id: int) -> Subscription:
-        return await self._get_one(id=model_id)
+    async def get(self, user_telegram_id: int, tracking_username: str) -> Subscription:
+        return await self._get_one(user_telegram_id=user_telegram_id, tracking_username=tracking_username)
 
     async def get_by_telegram_id(self, telegram_id: int, active: bool = False) -> list[Subscription]:
         query = select(self.base_table).filter_by(user_telegram_id=telegram_id)
