@@ -81,7 +81,8 @@ class TrackingMediaService:
                         current_media_instagram_id_to_id[schema.external_id],
                         display_uri=schema.display_uri,
                         like_count=schema.like_count,
-                        comment_count=schema.comment_count
+                        comment_count=schema.comment_count,
+                        updated_at=dt.datetime.now()
                     )
                 else:
                     model = await self.tracking_media_repository.create(

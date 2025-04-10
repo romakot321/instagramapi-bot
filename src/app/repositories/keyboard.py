@@ -33,13 +33,22 @@ class KeyboardRepository:
         markup.resize_keyboard = True
         return markup
 
-    def build_paywall_keyboard(self) -> types.InlineKeyboardMarkup:
+    def build_paywall_keyboard(
+        self, tracking_username: str | None = None, tariff_id: int | None = None
+    ) -> types.InlineKeyboardMarkup:
+        url = "https://" + urlparse(BOT_WEBHOOK_URL).netloc + "/paywall"
+        if tracking_username and tariff_id:
+            url += (
+                "?tracking_username="
+                + tracking_username
+                + "&tariff_id="
+                + str(tariff_id)
+            )
+
         builder = InlineKeyboardBuilder()
         builder.button(
             text=Action.subscription_add.text,
-            web_app=types.WebAppInfo(
-                url="https://" + urlparse(BOT_WEBHOOK_URL).netloc + "/paywall"
-            ),
+            web_app=types.WebAppInfo(url=url),
         )
         builder.adjust(1)
         return builder.as_markup()
@@ -110,23 +119,27 @@ class KeyboardRepository:
         builder.adjust(1)
         return builder.as_markup()
 
-    def build_tracking_settings_keyboard(self, username: str, tarrifs: list[Tariff]) -> types.InlineKeyboardMarkup:
+    def build_tracking_settings_keyboard(
+        self, username: str, tarrifs: list[Tariff]
+    ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         for tariff in tarrifs:
             builder.button(
-                text="Отслеживать статистику раз в " + humanize.naturaldelta(dt.timedelta(seconds=tariff.tracking_report_interval)),
+                text="Отслеживать статистику раз в "
+                + humanize.naturaldelta(
+                    dt.timedelta(seconds=tariff.tracking_report_interval)
+                ),
                 callback_data=SubscriptionActionCallback(
                     action=Action.tracking_report_interval.action,
                     ig_u=username,
-                    t_id=tariff.id
-                )
+                    t_id=tariff.id,
+                ),
             )
         builder.button(
             text="Назад",
             callback_data=TrackingActionCallback(
-                action=Action.tracking_show.action,
-                username=username
-            )
+                action=Action.tracking_show.action, username=username
+            ),
         )
         builder.adjust(1)
         return builder.as_markup()
@@ -223,11 +236,11 @@ class KeyboardRepository:
         return builder.as_markup()
 
     def build_to_tracking_show_keyboard(
-        self, tracking_username: str
+        self, tracking_username: str, button_text: str | None = None
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
-            text="Назад",
+            text="Назад" if button_text is None else button_text,
             callback_data=TrackingActionCallback(
                 action=Action.tracking_show.action, username=tracking_username
             ).pack(),
@@ -279,9 +292,9 @@ class KeyboardRepository:
             builder.row(
                 types.InlineKeyboardButton(
                     text=emoji
-                        + " "
-                        + media.created_at.strftime("%d.%m.%Y %H:%M")
-                        + f"  {media.like_count} ❤️ {media.comment_count} 💬",
+                    + " "
+                    + media.created_at.strftime("%d.%m.%Y %H:%M")
+                    + f"  {media.like_count} ❤️ {media.comment_count} 💬",
                     callback_data=TrackingMediaActionCallback(
                         action=Action.tracking_media_stats.action,
                         instagram_id=media.instagram_id,

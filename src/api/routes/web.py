@@ -22,14 +22,19 @@ templates.env.filters["humanize_seconds"] = lambda i: humanize.naturaldelta(dt.t
 @router.get("/paywall", response_class=HTMLResponse)
 async def paywall(
         request: Request,
+        tracking_username: str | None = Query(None),
+        tariff_id: int | None = Query(None),
         service: SubscriptionService = Depends(SubscriptionService.depend)
 ):
     tariffs = await service.get_tariffs_list()
+    if tariff_id is not None:
+        tariffs = [t for t in tariffs if t.id == tariff_id]
     return templates.TemplateResponse(
         "paywall.html",
         {
             "request": request,
             "tariffs": tariffs,
+            "tracking_username": tracking_username
         }
     )
 

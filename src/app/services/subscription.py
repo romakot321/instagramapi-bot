@@ -83,18 +83,38 @@ class SubscriptionService:
         )
         return build_aiogram_method(None, tg_object=tg_object, message=message)
 
+    async def handle_subscription_upgrade(
+        self, query: CallbackQuery, data: SubscriptionActionCallback
+    ) -> TelegramMethod:
+        message = TextMessage(
+            text="Изменение тарифа для отслеживания профиля " + data.ig_u,
+            reply_markup=self.keyboard_repository.build_paywall_keyboard(
+                data.ig_u, data.t_id
+            ),
+        )
+        return build_aiogram_method(None, tg_object=query, message=message)
+
     async def handle_subscription_add_created(
         self, query: CallbackQuery, data: SubscriptionActionCallback
     ) -> TelegramMethod:
-        message = TextMessage(text="Оплата получена")
+        reply_markup = None
+        if data.ig_u:
+            reply_markup = self.keyboard_repository.build_to_tracking_show_keyboard(
+                data.ig_u, button_text="К отслеживанию"
+            )
+
+        message = TextMessage(
+            text="Оплата получена",
+            reply_markup=reply_markup,
+        )
         return build_aiogram_method(query.from_user.id, message)
 
     async def handle_subscription_add_big_tracking(
         self, query: CallbackQuery, data: TrackingActionCallback
     ) -> TelegramMethod:
         message = TextMessage(
-            text=f"Оплата подписки на аккаунт {data.username}" \
-                  "\nЭто необходимо, так как профиль содержит слишком большой объем данных",
+            text=f"Оплата подписки на аккаунт {data.username}"
+            "\nЭто необходимо, так как профиль содержит слишком большой объем данных",
             reply_markup=self.keyboard_repository.build_paywall_big_tracking_keyboard(
                 data.username
             ),

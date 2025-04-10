@@ -35,15 +35,26 @@ class SubscriptionService[Table: Subscription, int](BaseService):
         return model
 
     async def create(self, schema: SubscriptionCreateSchema) -> Subscription:
+        if schema.tracking_username:
+            current_subscription = await self._get_one(tracking_username=schema.tracking_username, user_telegram_id=schema.user_telegram_id, mute_not_found_exception=True)
+            if current_subscription is not None:
+                model = await self._update(
+                    current_subscription.id,
+                    tariff_id=schema.tariff_id
+                )
+                await BotController.send_subscription_created(schema.user_telegram_id, schema.tracking_username)
+                return model
+
         tariff = await self.get_tariff(schema.tariff_id)
         expire_at = dt.datetime.now() + dt.timedelta(days=tariff.access_days)
         model = await self._create(
             user_telegram_id=schema.user_telegram_id,
             expire_at=expire_at,
+            tracking_username=schema.tracking_username,
             tariff_id=schema.tariff_id,
         )
         await self._commit()
-        await BotController.send_subscription_created(schema.user_telegram_id)
+        await BotController.send_subscription_created(schema.user_telegram_id, schema.tracking_username)
         return model
 
     async def create_big_tracking(self, schema: SubscriptionCreateSchema) -> Subscription:
