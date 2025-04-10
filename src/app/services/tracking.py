@@ -385,6 +385,25 @@ class TrackingService:
         )
         return build_aiogram_method(None, tg_object=query, message=message)
 
+    async def handle_tracking_hidden_followers(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> TelegramMethod:
+        info = await self.instagram_repository.get_user_hidden_followers(
+            data.username
+        )
+        usernames = info.follow_usernames[(data.page - 1) * 10 : data.page * 10]
+        message = TextMessage(
+            text=build_tracking_followers_text(usernames),
+            reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
+                Action.tracking_hidden_followers.action,
+                data.username,
+                len(info.follow_usernames),
+                data.page,
+            ),
+            parse_mode="MarkdownV2"
+        )
+        return build_aiogram_method(None, tg_object=query, message=message)
+
     async def handle_report_trackings(
         self, tg_object: CallbackQuery | Message
     ) -> AsyncGenerator[TelegramMethod]:

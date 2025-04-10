@@ -83,6 +83,14 @@ class InstagramRepository:
             body = await resp.json()
         return InstagramUserFollowDifferenceSchema.model_validate(body)
 
+    async def get_user_hidden_followers(self, username: str) -> InstagramUserFollowDifferenceSchema:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get(f"/api/user/{username}/hidden_followers")
+            if resp.status != 200:
+                raise ValueError(await resp.text())
+            body = await resp.json()
+        return InstagramUserFollowDifferenceSchema.model_validate(body)
+
     async def get_user_followers(self, username: str) -> list[InstagramUserSchema]:
         raise DeprecationWarning("Deprecated function")
         async with ClientSession(base_url=self.API_URL) as session:

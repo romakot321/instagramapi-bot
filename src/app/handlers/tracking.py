@@ -216,6 +216,21 @@ async def tracking_following_followers_difference(
 
 
 @router.callback_query(
+    TrackingActionCallback.filter(
+        F.action == Action.tracking_hidden_followers.action
+    )
+)
+async def tracking_hidden_followers(
+    callback_query: CallbackQuery,
+    callback_data: TrackingActionCallback,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
+):
+    method = await tracking_service.handle_tracking_hidden_followers(callback_query, callback_data)
+    await bot(method)
+
+
+@router.callback_query(
     ActionCallback.filter(
         F.action == Action.report_trackings.action
     )
