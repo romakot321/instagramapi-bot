@@ -27,11 +27,16 @@ async def show_tracking_media(
     bot: Bot,
     tracking_media_service: Annotated[TrackingMediaService, Depends(TrackingMediaService.init)],
 ):
-    prev_msg = None
+    sended_messages = []
     async for method in tracking_media_service.handle_show_tracking_medias(callback_query, callback_data):
-        prev_msg = await bot(method)
+        msg = await bot(method)
         if isinstance(method, SendMessage):
-            await bot.delete_message(chat_id=prev_msg.chat.id, message_id=prev_msg.message_id)
+            sended_messages.append(msg)
+
+    if len(sended_messages) <= 1:
+        return
+    for msg in sended_messages[:-1]:
+        await bot.delete_message(chat_id=msg.chat.id, message_id=msg.message_id)
 
 
 @router.callback_query(

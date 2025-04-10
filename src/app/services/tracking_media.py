@@ -60,6 +60,8 @@ class TrackingMediaService:
                     display_uri=schema.display_uri,
                     instagram_id=schema.external_id,
                     created_at=schema.created_at,
+                    like_count=schema.like_count,
+                    comment_count=schema.comment_count,
                     updated_at=dt.datetime.now()
                 )
                 tracking_medias.append(model)
@@ -106,7 +108,7 @@ class TrackingMediaService:
             return None
         if not tracking_medias:
             tracking_medias = await self._load_tracking_medias(username)
-            return tracking_medias[page * count:(page + 1) * count], len(tracking_medias)
+            return tracking_medias[(page - 1) * count:page * count], len(tracking_medias)
         total_count = await self.tracking_media_repository.count(instagram_username=username)
 
         newest_media = list(sorted(tracking_medias, reverse=True, key=lambda m: m.updated_at or dt.date(year=1970, month=1, day=1)))[0]
@@ -116,7 +118,7 @@ class TrackingMediaService:
             tracking_info = await self.instagram_repository.get_user_info(username)
             if tracking_info.media_count != total_count:
                 tracking_medias = await self._update_tracking_medias(username)
-                return tracking_medias[page * count:(page + 1) * count], len(tracking_medias)
+                return tracking_medias[(page - 1) * count:page * count], len(tracking_medias)
 
         return tracking_medias, total_count
 
@@ -132,6 +134,7 @@ class TrackingMediaService:
             models, total_count = await self._get_tracking_medias(data.username, page=data.page, update=True)
         else:
             models, total_count = medias
+        logger.debug((models, total_count))
         message = TextMessage(
             text="Публикации пользователя " + data.username,
             reply_markup=self.keyboard_repository.build_tracking_medias_list_keyboard(models, data.page, total_count),
@@ -149,6 +152,7 @@ class TrackingMediaService:
             message = TextMessage(
                 text=build_media_stats_text(stats, model),
                 reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
+                parse_mode="MarkdownV2"
             )
         elif info.display_uri.startswith("[") and info.display_uri.endswith("]"):
             urls = json.loads(info.display_uri)
@@ -161,18 +165,21 @@ class TrackingMediaService:
             message = VideoMessage(
                 caption=build_media_stats_text(stats, model),
                 reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
-                video=info.display_uri
+                video=info.display_uri,
+                parse_mode="MarkdownV2"
             )
         elif mimetypes.guess_type(info.display_uri)[0].startswith("image/"):
             message = PhotoMessage(
                 caption=build_media_stats_text(stats, model),
                 reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
-                photo=info.display_uri
+                photo=info.display_uri,
+                parse_mode="MarkdownV2"
             )
         else:
             message = TextMessage(
                 text=build_media_stats_text(stats, model),
                 reply_markup=self.keyboard_repository.build_tracking_media_keyboard(model, page=data.page),
+                parse_mode="MarkdownV2"
             )
 
         methods.append(build_aiogram_method(None, message=message, tg_object=query))

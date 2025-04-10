@@ -1,8 +1,9 @@
-from fastapi import HTTPException, Response
+from fastapi import Response, HTTPException
 import datetime as dt
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import exc
 from sqlalchemy_service import BaseService
 
 from api.schemas.subscription import SubscriptionCreateSchema
@@ -17,7 +18,7 @@ class SubscriptionService[Table: Subscription, int](BaseService):
     session: AsyncSession
     response: Response
 
-    tariffs_big_tracking = [{"id": 0, "price": 590, "access_days": 30, "text": "1 отчет в день за 590 руб."}]
+    tariffs_big_tracking = [{"id": 1, "price": 590, "access_days": 30, "text": "1 отчет в день за 590 руб."}]
 
     async def get_tariffs_list(self) -> list[Tariff]:
         query = select(Tariff)
@@ -41,6 +42,7 @@ class SubscriptionService[Table: Subscription, int](BaseService):
             expire_at=expire_at,
             tariff_id=schema.tariff_id,
         )
+        await self._commit()
         await BotController.send_subscription_created(schema.user_telegram_id)
         return model
 
@@ -66,3 +68,26 @@ class SubscriptionService[Table: Subscription, int](BaseService):
 
     async def count(self):
         return await self._count()
+
+    async def _commit(self, force: bool = False):
+        """
+        Commit changes.
+        Handle sqlalchemy.exc.IntegrityError.
+        If exception is not found error,
+        then throw HTTPException with 404 status (Not found).
+        Else log exception and throw HTTPException with 409 status (Conflict)
+        """
+        try:
+            await self.session.commit()
+        except exc.IntegrityError as e:
+            await self.session.rollback()
+            if 'is not present in table' not in str(e.orig):
+                logger.exception(e)
+                raise HTTPException(status_code=409)
+            table_name = str(e.orig).split('is not present in table')[1]
+            table_name = table_name.strip().capitalize()
+            table_name = table_name.strip('"').strip("'")
+            raise HTTPException(
+                status_code=404,
+                detail=f'{table_name} not found'
+            )

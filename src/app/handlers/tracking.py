@@ -157,7 +157,7 @@ async def tracking_stats(
 
 @router.callback_query(
     TrackingActionCallback.filter(
-        F.action == Action.tracking_followers_following_collision
+        F.action == Action.tracking_followers_following_collision.action
     )
 )
 async def tracking_followers_following_collision(
@@ -182,6 +182,36 @@ async def tracking_settings(
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)]
 ):
     method = await tracking_service.handle_settings(callback_query, callback_data)
+    await bot(method)
+
+
+@router.callback_query(
+    TrackingActionCallback.filter(
+        F.action == Action.tracking_followers_following_difference.action
+    )
+)
+async def tracking_followers_following_difference(
+    callback_query: CallbackQuery,
+    callback_data: TrackingActionCallback,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
+):
+    method = await tracking_service.handle_tracking_followers_following_difference(callback_query, callback_data)
+    await bot(method)
+
+
+@router.callback_query(
+    TrackingActionCallback.filter(
+        F.action == Action.tracking_following_followers_difference.action
+    )
+)
+async def tracking_following_followers_difference(
+    callback_query: CallbackQuery,
+    callback_data: TrackingActionCallback,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
+):
+    method = await tracking_service.handle_tracking_following_followers_difference(callback_query, callback_data)
     await bot(method)
 
 
