@@ -78,7 +78,14 @@ class KeyboardRepository:
         self, tracking_username: str
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.button(**Action.subscription_add.model_dump())
+        builder.button(
+            text="Купить доп. отслеживание",
+            callback_data=SubscriptionActionCallback(
+                action=Action.subscription_add.action,
+                t_id=-1,
+                ig_u=tracking_username
+            )
+        )
         builder.button(
             text="Назад",
             callback_data=TrackingActionCallback(
@@ -212,10 +219,15 @@ class KeyboardRepository:
         builder.adjust(1)
         return builder.as_markup()
 
-    def build_tracking_show_full_keyboard(self) -> types.InlineKeyboardMarkup:
+    def build_tracking_show_full_keyboard(self, tracking_username: str) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
-            **Action.subscription_add.model_dump() | {"text": "Показать все данные"}
+            text="Показать все данные",
+            callback_data=SubscriptionActionCallback(
+                action=Action.subscription_add.action,
+                t_id=-1,
+                ig_u=tracking_username
+            )
         )
         builder.adjust(1)
         return builder.as_markup()
@@ -248,8 +260,36 @@ class KeyboardRepository:
         builder.adjust(1)
         return builder.as_markup()
 
+    def build_tracking_media_paginated_keyboard(self, tracking_media: TrackingMedia, total_count: int, page: int, media_page: int):
+        builder = InlineKeyboardBuilder()
+        builder.row(
+            *self.paginate_row(
+                total_count,
+                media_page,
+                TrackingMediaActionCallback(
+                    action=Action.tracking_media_stats.action,
+                    instagram_id=tracking_media.instagram_id
+                ),
+                on_page_count=1
+            )
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text="Назад",
+                callback_data=TrackingActionCallback(
+                    action=Action.show_tracking_media.action,
+                    username=tracking_media.instagram_username,
+                    page=page,
+                ).pack(),
+            )
+        )
+        builder.adjust(1)
+        return builder.as_markup()
+
     def build_tracking_media_keyboard(
-        self, tracking_media: TrackingMedia, page: int = 0
+        self,
+        tracking_media: TrackingMedia,
+        page: int = 0
     ):
         builder = InlineKeyboardBuilder()
         builder.button(

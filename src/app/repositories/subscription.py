@@ -18,6 +18,7 @@ class SubscriptionRepository[Table: Subscription, int](BaseRepository):
         query = select(self.base_table).filter_by(user_telegram_id=telegram_id)
         if active:
             query = query.filter(Subscription.expire_at > dt.datetime.now())
+        query = self._query_add_select_in_load(query, Subscription.tariff)
         return list(await self.session.scalars(query))
 
     async def update(self, model_id: int, **fields) -> Subscription:
