@@ -20,10 +20,11 @@ class Action(Enum):
     add_tracking = ButtonData(action="add_tracking", text="Добавить отслеживание")
     show_trackings = ButtonData(action="show_trackings", text="Мои отслеживания")
     subscription_menu = ButtonData(action="subscription_menu", text="Подписка")
+    support_menu = ButtonData(action="subscription_menu", text="Поддержка")
     report_trackings = ButtonData(action="report_trackings", text=None)
 
-    tracking_subscribe = ButtonData(action="t_subscribe", text="Подписаться")
-    tracking_unsubscribe = ButtonData(action="t_unsubscribe", text="Отписаться")
+    tracking_subscribe = ButtonData(action="t_subscribe", text="🟢 Подписаться")
+    tracking_unsubscribe = ButtonData(action="t_unsubscribe", text="🔴 Отписаться")
     tracking_followers = ButtonData(action="t_followers", text="Подписчики")
     tracking_followers_following_collision = ButtonData(action="t_fwr_fng_col", text="Взаимные подписки")
     tracking_followers_following_difference = ButtonData(action="t_fwr_fng_diff", text="Невзаимные подписчики")

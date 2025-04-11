@@ -21,16 +21,14 @@ router = Router(name=__name__)
 async def get_user_reports(
     message: Message,
     bot: Bot,
-    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)]
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
     logger.debug("Sending reports to " + str(message.from_user.id))
     async for method in tracking_service.handle_report_trackings(message):
         await bot(method)
 
 
-@router.message(
-    F.text == Action.add_tracking.text
-)
+@router.message(F.text == Action.add_tracking.text)
 async def add_tracking_message(
     message: Message,
     state: FSMContext,
@@ -63,15 +61,13 @@ async def tracking_create(
     async for method in tracking_service.handle_create(message, state):
         msg = await bot(method)
         if previous_message is not None:
-            await bot.delete_message(previous_message.chat.id, previous_message.message_id)
+            await bot.delete_message(
+                previous_message.chat.id, previous_message.message_id
+            )
         previous_message = msg
 
 
-@router.callback_query(
-    ActionCallback.filter(
-        F.action == Action.show_trackings.action
-    )
-)
+@router.callback_query(ActionCallback.filter(F.action == Action.show_trackings.action))
 async def show_trackings_query(
     callback_query: CallbackQuery,
     bot: Bot,
@@ -81,9 +77,7 @@ async def show_trackings_query(
     await bot(method)
 
 
-@router.message(
-    F.text == Action.show_trackings.text
-)
+@router.message(F.text == Action.show_trackings.text)
 async def show_trackings_message(
     message: Message,
     bot: Bot,
@@ -94,9 +88,7 @@ async def show_trackings_message(
 
 
 @router.callback_query(
-    TrackingActionCallback.filter(
-        F.action == Action.tracking_show.action
-    )
+    TrackingActionCallback.filter(F.action == Action.tracking_show.action)
 )
 async def tracking_show(
     callback_query: CallbackQuery,
@@ -109,9 +101,7 @@ async def tracking_show(
 
 
 @router.callback_query(
-    TrackingActionCallback.filter(
-        F.action == Action.tracking_subscribe.action
-    )
+    TrackingActionCallback.filter(F.action == Action.tracking_subscribe.action)
 )
 async def tracking_subscribe(
     callback_query: CallbackQuery,
@@ -119,14 +109,14 @@ async def tracking_subscribe(
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
-    method = await tracking_service.handle_tracking_subscribe(callback_query, callback_data)
+    method = await tracking_service.handle_tracking_subscribe(
+        callback_query, callback_data
+    )
     await bot(method)
 
 
 @router.callback_query(
-    TrackingActionCallback.filter(
-        F.action == Action.tracking_unsubscribe.action
-    )
+    TrackingActionCallback.filter(F.action == Action.tracking_unsubscribe.action)
 )
 async def tracking_unsubscribe(
     callback_query: CallbackQuery,
@@ -134,14 +124,14 @@ async def tracking_unsubscribe(
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
-    method = await tracking_service.handle_tracking_unsubscribe(callback_query, callback_data)
+    method = await tracking_service.handle_tracking_unsubscribe(
+        callback_query, callback_data
+    )
     await bot(method)
 
 
 @router.callback_query(
-    TrackingActionCallback.filter(
-        F.action == Action.tracking_stats.action
-    )
+    TrackingActionCallback.filter(F.action == Action.tracking_stats.action)
 )
 async def tracking_stats(
     callback_query: CallbackQuery,
@@ -164,20 +154,20 @@ async def tracking_followers_following_collision(
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
-    method = await tracking_service.handle_tracking_followers_following_collision(callback_query, callback_data)
+    method = await tracking_service.handle_tracking_followers_following_collision(
+        callback_query, callback_data
+    )
     await bot(method)
 
 
 @router.callback_query(
-    TrackingActionCallback.filter(
-        F.action == Action.tracking_settings.action
-    )
+    TrackingActionCallback.filter(F.action == Action.tracking_settings.action)
 )
 async def tracking_settings(
     callback_query: CallbackQuery,
     callback_data: TrackingActionCallback,
     bot: Bot,
-    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)]
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
     method = await tracking_service.handle_settings(callback_query, callback_data)
     await bot(method)
@@ -194,7 +184,9 @@ async def tracking_followers_following_difference(
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
-    method = await tracking_service.handle_tracking_followers_following_difference(callback_query, callback_data)
+    method = await tracking_service.handle_tracking_followers_following_difference(
+        callback_query, callback_data
+    )
     await bot(method)
 
 
@@ -209,14 +201,14 @@ async def tracking_following_followers_difference(
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
-    method = await tracking_service.handle_tracking_following_followers_difference(callback_query, callback_data)
+    method = await tracking_service.handle_tracking_following_followers_difference(
+        callback_query, callback_data
+    )
     await bot(method)
 
 
 @router.callback_query(
-    TrackingActionCallback.filter(
-        F.action == Action.tracking_hidden_followers.action
-    )
+    TrackingActionCallback.filter(F.action == Action.tracking_hidden_followers.action)
 )
 async def tracking_hidden_followers(
     callback_query: CallbackQuery,
@@ -224,14 +216,14 @@ async def tracking_hidden_followers(
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
-    method = await tracking_service.handle_tracking_hidden_followers(callback_query, callback_data)
+    method = await tracking_service.handle_tracking_hidden_followers(
+        callback_query, callback_data
+    )
     await bot(method)
 
 
 @router.callback_query(
-    ActionCallback.filter(
-        F.action == Action.report_trackings.action
-    )
+    ActionCallback.filter(F.action == Action.report_trackings.action)
 )
 async def report_trackings(
     callback_query: CallbackQuery,
@@ -241,3 +233,20 @@ async def report_trackings(
     logger.debug("Sending reports to " + str(callback_query.from_user.id))
     async for method in tracking_service.handle_report_trackings(callback_query):
         await bot(method)
+
+
+@router.callback_query(
+    TrackingActionCallback.filter(F.action == Action.report_trackings.action)
+)
+async def report_tracking(
+    callback_query: CallbackQuery,
+    callback_data: TrackingActionCallback,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
+):
+    logger.debug(
+        f"Sending report {callback_data.username} to "
+        + str(callback_query.from_user.id)
+    )
+    method = await tracking_service.handle_report_tracking(callback_query, callback_data)
+    await bot(method)

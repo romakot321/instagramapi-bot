@@ -69,7 +69,7 @@ class SubscriptionService[Table: Subscription, int](BaseService):
         return model
 
     async def list(self, page=None, count=None) -> list[Subscription]:
-        return list(await self._get_list(page=page, count=count))
+        return list(await self._get_list(page=page, count=count, select_in_load=Subscription.tariff))
 
     async def get(self, model_id: int) -> Subscription:
         return await self._get_one(id=model_id)

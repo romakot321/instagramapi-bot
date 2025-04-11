@@ -428,3 +428,25 @@ class TrackingService:
                 parse_mode="MarkdownV2",
             )
             yield build_aiogram_method(tg_object.from_user.id, message)
+
+    async def handle_report_tracking(
+        self, tg_object: CallbackQuery | Message, data: TrackingActionCallback
+    ) -> TelegramMethod:
+        tracking = await self.tracking_repository.get(tg_object.from_user.id, data.username)
+        user_info = await self.instagram_repository.get_user_info(
+            tracking.instagram_username
+        )
+        user_stats = await self.instagram_repository.get_user_stats(
+            tracking.instagram_username
+        )
+        media_stats = await self.instagram_repository.get_media_user_stats(
+            tracking.instagram_username
+        )
+        message = TextMessage(
+            text=build_tracking_report_text(user_stats, media_stats, user_info),
+            reply_markup=self.keyboard_repository.build_tracking_report_keyboard(
+                tracking.instagram_username
+            ),
+            parse_mode="MarkdownV2",
+        )
+        return build_aiogram_method(tg_object.from_user.id, message)
