@@ -8,8 +8,29 @@ from aiogram.types import Message
 from fastapi import HTTPException
 from loguru import logger
 
+from app.schemas.exception import ApiException
+from app import bot_instance
+
 
 def setup_error_handlers(dispatcher: Dispatcher):
+    @dispatcher.error(
+        ExceptionTypeFilter(ApiException), F.update.message.as_("message")
+    )
+    async def handle_api_error_msg(event: ErrorEvent, message: Message):
+        logger.exception(event.exception)
+        await message.answer("Внутреняя ошибка")
+        await bot_instance.send_message(799377676, event.exception.detail() or event.exception.message)
+        return True
+
+    @dispatcher.error(
+        ExceptionTypeFilter(ApiException), F.update.callback_query.as_("callback_query")
+    )
+    async def handle_api_error_query(event: ErrorEvent, callback_query: CallbackQuery):
+        logger.exception(event.exception)
+        await bot_instance.send_message(callback_query.from_user.id, "Внутреняя ошибка")
+        await bot_instance.send_message(799377676, event.exception.detail() or event.exception.message)
+        return True
+
     @dispatcher.error(
         ExceptionTypeFilter(HTTPException), F.update.message.as_("message")
     )

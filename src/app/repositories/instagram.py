@@ -2,6 +2,8 @@ from aiohttp import ClientSession
 from loguru import logger
 import os
 
+from app.schemas.exception import ApiException
+
 from app.schemas.instagram import (
     InstagramMediaListSchema,
     InstagramMediaSchema,
@@ -27,7 +29,7 @@ class InstagramRepository:
                 return "Профиль не найден"
             elif resp.status == 400:
                 return (await resp.json())["detail"]
-            raise ValueError(await resp.text())
+            raise ApiException(await resp.json())
 
     async def get_user_info(self, username: str) -> InstagramUserSchema | None:
         async with ClientSession(base_url=self.API_URL) as session:
@@ -37,7 +39,7 @@ class InstagramRepository:
                 return InstagramUserSchema.model_validate(body)
             elif resp.status == 404:
                 return None
-            raise ValueError(await resp.text())
+            raise ApiException(await resp.text())
 
     async def get_user_followers_difference(
         self, username: str
@@ -45,7 +47,7 @@ class InstagramRepository:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(f"/api/user/{username}/followers")
             if resp.status != 200:
-                raise ValueError(await resp.text())
+                raise ApiException(await resp.text())
             body = await resp.json()
         return [InstagramUserFollowersDifferenceSchema.model_validate(i) for i in body]
 
@@ -55,7 +57,7 @@ class InstagramRepository:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(f"/api/user/{username}/following")
             if resp.status != 200:
-                raise ValueError(await resp.text())
+                raise ApiException(await resp.text())
             body = await resp.json()
         return [InstagramUserFollowingDifferenceSchema.model_validate(i) for i in body]
 
@@ -63,7 +65,7 @@ class InstagramRepository:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(f"/api/user/{username}/followers/following")
             if resp.status != 200:
-                raise ValueError(await resp.text())
+                raise ApiException(await resp.text())
             body = await resp.json()
         return InstagramUserFollowDifferenceSchema.model_validate(body)
 
@@ -71,7 +73,7 @@ class InstagramRepository:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(f"/api/user/{username}/following/followers")
             if resp.status != 200:
-                raise ValueError(await resp.text())
+                raise ApiException(await resp.text())
             body = await resp.json()
         return InstagramUserFollowDifferenceSchema.model_validate(body)
 
@@ -79,7 +81,7 @@ class InstagramRepository:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(f"/api/user/{username}/followers_following")
             if resp.status != 200:
-                raise ValueError(await resp.text())
+                raise ApiException(await resp.text())
             body = await resp.json()
         return InstagramUserFollowDifferenceSchema.model_validate(body)
 
@@ -87,7 +89,7 @@ class InstagramRepository:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(f"/api/user/{username}/hidden_followers")
             if resp.status != 200:
-                raise ValueError(await resp.text())
+                raise ApiException(await resp.text())
             body = await resp.json()
         return InstagramUserFollowDifferenceSchema.model_validate(body)
 
@@ -95,7 +97,8 @@ class InstagramRepository:
         raise DeprecationWarning("Deprecated function")
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get("/api/user/" + username + "/followers")
-            assert resp.status == 200, await resp.text()
+            if resp.status != 200:
+                raise ApiException(await resp.text())
             body = await resp.json()
         return [InstagramUserSchema.model_validate(user) for user in body]
 
@@ -104,7 +107,8 @@ class InstagramRepository:
             resp = await session.get(
                 "/api/user/" + username + "/stats", params={"days": 7}
             )
-            assert resp.status == 200, await resp.text()
+            if resp.status != 200:
+                raise ApiException(await resp.text())
             body = await resp.json()
         return InstagramUserStatsSchema.model_validate(body)
 
@@ -116,7 +120,8 @@ class InstagramRepository:
             params["max_id"] = max_id
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get("/api/media", params=params)
-            assert resp.status in (200, 201), await resp.text()
+            if resp.status not in (200, 201):
+                raise ApiException(await resp.text())
             body = await resp.json()
         return InstagramMediaListSchema.model_validate(body)
 
@@ -124,7 +129,7 @@ class InstagramRepository:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get("/api/media/" + media_id)
             if resp.status != 200:
-                raise ValueError(await resp.text())
+                raise ApiException(await resp.text())
             body = await resp.json()
         return InstagramMediaSchema.model_validate(body)
 
@@ -135,7 +140,8 @@ class InstagramRepository:
             resp = await session.get(
                 "/api/media/" + media_id + "/stats", params={"days": days}
             )
-            assert resp.status == 200, await resp.text()
+            if resp.status != 200:
+                raise ApiException(await resp.text())
             body = await resp.json()
         logger.debug(body)
         return InstagramMediaStatsSchema.model_validate(body)
@@ -147,6 +153,7 @@ class InstagramRepository:
             resp = await session.get(
                 "/api/media/stats", params={"days": days, "username": username}
             )
-            assert resp.status == 200, await resp.text()
+            if resp.status != 200:
+                raise ApiException(await resp.text())
             body = await resp.json()
         return InstagramMediaUserStatsSchema.model_validate(body)
