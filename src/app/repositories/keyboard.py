@@ -28,6 +28,7 @@ class KeyboardRepository:
         builder.button(**Action.add_tracking.model_dump())
         builder.button(**Action.show_trackings.model_dump())
         builder.button(**Action.subscription_menu.model_dump())
+        builder.button(**Action.support_menu.model_dump())
         builder.adjust(1)
         markup = builder.as_markup()
         markup.resize_keyboard = True
@@ -222,7 +223,7 @@ class KeyboardRepository:
     def build_tracking_show_full_keyboard(self, tracking_username: str) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
-            text="Показать все данные",
+            text="Посмотреть на кого подписан пользователь",
             callback_data=SubscriptionActionCallback(
                 action=Action.subscription_add.action,
                 t_id=-1,

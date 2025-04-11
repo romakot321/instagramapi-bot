@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 import asyncio
 import datetime as dt
 
+from api.services.subscription import SubscriptionService
 from api.services.user import UserService
 from app.controller import BotController
 from app.main import setup_bot
@@ -48,10 +49,17 @@ def register_cors(application):
 async def send_reports():
     async with UserService() as user_service:
         users = await user_service.list(count=10000000)
-    now = dt.datetime.now()
+    async with SubscriptionService() as subscription_service:
+        subscriptions = await subscription_service.list(count=10000000)
+    now = dt.datetime.now(dt.UTC)
+    user_id_to_subscriptions = {user.telegram_id: [s for s in subscriptions if s.user_telegram_id == user.telegram_id] for user in users}
     for user in users:
-        await BotController.send_reports(user.telegram_id)
-        await asyncio.sleep(0.3)  # Rate-limit
+        for subscription in user_id_to_subscriptions.get(user.telegram_id, []):
+            if subscription.tracking_username is None:
+                continue
+            # if now.hour * 3600 % int(subscription.tariff.tracking_report_interval) == 0:
+            #     await UserService.create_report(user.telegram_id, subscription.tracking_username)
+            await UserService.create_report(user.telegram_id, subscription.tracking_username)
 
 
 @asynccontextmanager
@@ -91,9 +99,11 @@ def init_web_application():
 
     from api.routes.subscription import router as subscription_router
     from api.routes.web import router as web_router
+    from api.routes.user import router as user_router
 
     application.include_router(subscription_router)
     application.include_router(web_router)
+    application.include_router(user_router)
     application.mount("/static", StaticFiles(directory="static"), name="static")
 
     # attach_admin_panel(application)

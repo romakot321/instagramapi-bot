@@ -45,8 +45,15 @@ _start_text = """
 2. Нажми на кнопку "Статистика", чтобы получить первый анализ своего аккаунта, наполненный полезными данными и рекомендациями.
 
 Не упусти шанс сделать свой Instagram успешнее! __Готов стартовать и увидеть свои результаты?__ 💪
+
+**Ваш Chat ID: {chat_id}**
 """
-start_text = escape_markdown(_start_text)
+
+
+_support_text = """
+По всем вопросам обращайтесь в службу поддержки 👉 [support_contact]
+"""
+support_text = escape_markdown(_support_text)
 
 
 _tracking_info_text = """
@@ -121,6 +128,11 @@ _tracking_subscribe_text = """
 Вы успешно подписались на пользователя [[{tracking_username}]]((https://instagram.com/{tracking_username})).
 Вам будет приходить статистика раз в {report_interval}, но вы можете настроить периодичность сбора статистики и отправки отчетов
 """
+
+
+def build_start_text(chat_id: int) -> str:
+    text = _start_text.format(chat_id=chat_id)
+    return escape_markdown(text)
 
 
 def build_tracking_subscribe_text(tracking_username: str, report_interval: int) -> str:

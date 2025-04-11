@@ -14,7 +14,7 @@ from app.repositories.keyboard import KeyboardRepository
 from app.repositories.user import UserRepository
 from app.schemas.action_callback import Action
 from app.schemas.message import TextMessage
-from app.schemas.texts import start_text
+from app.schemas.texts import build_start_text
 from app.services.utils import build_aiogram_method
 
 
@@ -51,7 +51,7 @@ class UserService:
             telegram_username=tg_object.from_user.username
         )
         message = TextMessage(
-            text=start_text,
+            text=build_start_text(tg_object.from_user.id),
             reply_markup=self.keyboard_repository.build_main_keyboard(),
             parse_mode="MarkdownV2",
         )
@@ -59,8 +59,8 @@ class UserService:
 
     async def _handle_main_menu_show(self, tg_object: Message | CallbackQuery):
         message = TextMessage(
-            text=start_text,
-            reply_markup=self.keyboard_repository.build_main_keyboard(),
+            text=build_start_text(tg_object.from_user.id),
+            reply_markup=self.keyboard_repository.build_to_add_tracking_keyboard(),
             parse_mode="MarkdownV2"
         )
         return build_aiogram_method(None, tg_object=tg_object, message=message)
