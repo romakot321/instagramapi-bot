@@ -188,9 +188,8 @@ class TrackingMediaService:
             )
         else:
             models, total_count = medias
-        logger.debug((models, total_count))
         message = TextMessage(
-            text="Публикации пользователя " + data.username,
+            text="Публикации пользователя " + data.username if total_count > 0 else "Публикаций нет",
             reply_markup=self.keyboard_repository.build_tracking_medias_list_keyboard(
                 models, data.page, total_count
             ),
@@ -227,7 +226,6 @@ class TrackingMediaService:
                 photo=urls[data.media_page - 1],
                 parse_mode="MarkdownV2",
             )
-            use_edit = False
         elif mimetypes.guess_type(info.display_uri)[0] is None:
             message = TextMessage(
                 text=build_media_stats_text(stats, model),

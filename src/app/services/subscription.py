@@ -79,7 +79,8 @@ class SubscriptionService:
     ) -> TelegramMethod:
         message = TextMessage(
             text=subscription_paywall_text,
-            reply_markup=self.keyboard_repository.build_paywall_keyboard(),
+            reply_markup=self.keyboard_repository.build_paywall_keyboard(data.ig_u, data.t_id),
+            parse_mode="MarkdownV2"
         )
         return build_aiogram_method(None, tg_object=tg_object, message=message)
 

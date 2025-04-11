@@ -155,25 +155,31 @@ class KeyboardRepository:
         self, username: str, subscribed: bool
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.button(
-            text=Action.tracking_stats.text,
-            callback_data=TrackingActionCallback(
-                action=Action.tracking_stats.action, username=username
-            ).pack(),
-        )
-        if subscribed:
-            builder.button(
-                text=Action.show_tracking_media.text,
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.tracking_stats.text,
                 callback_data=TrackingActionCallback(
-                    action=Action.show_tracking_media.action, username=username
+                    action=Action.tracking_stats.action, username=username
                 ).pack(),
             )
-            builder.button(
-                text=Action.tracking_followers_following_collision.text,
-                callback_data=TrackingActionCallback(
-                    action=Action.tracking_followers_following_collision.action,
-                    username=username,
-                ).pack(),
+        )
+        if subscribed:
+            builder.row(
+                types.InlineKeyboardButton(
+                    text=Action.show_tracking_media.text,
+                    callback_data=TrackingActionCallback(
+                        action=Action.show_tracking_media.action, username=username
+                    ).pack(),
+                )
+            )
+            builder.row(
+                types.InlineKeyboardButton(
+                    text=Action.tracking_followers_following_collision.text,
+                    callback_data=TrackingActionCallback(
+                        action=Action.tracking_followers_following_collision.action,
+                        username=username,
+                    ).pack(),
+                )
             )
             builder.row(
                 types.InlineKeyboardButton(
@@ -191,32 +197,39 @@ class KeyboardRepository:
                     ).pack(),
                 ),
             )
-            builder.button(
-                text=Action.tracking_hidden_followers.text,
-                callback_data=TrackingActionCallback(
-                    action=Action.tracking_hidden_followers.action, username=username
-                ).pack(),
+            builder.row(
+                types.InlineKeyboardButton(
+                    text=Action.tracking_hidden_followers.text,
+                    callback_data=TrackingActionCallback(
+                        action=Action.tracking_hidden_followers.action, username=username
+                    ).pack(),
+                )
             )
-            builder.button(
-                text=Action.tracking_settings.text,
-                callback_data=TrackingActionCallback(
-                    action=Action.tracking_settings.action, username=username
-                ).pack(),
+            builder.row(
+                types.InlineKeyboardButton(
+                    text=Action.tracking_settings.text,
+                    callback_data=TrackingActionCallback(
+                        action=Action.tracking_settings.action, username=username
+                    ).pack(),
+                )
             )
-            builder.button(
-                text=Action.tracking_unsubscribe.text,
-                callback_data=TrackingActionCallback(
-                    action=Action.tracking_unsubscribe.action, username=username
-                ).pack(),
+            builder.row(
+                types.InlineKeyboardButton(
+                    text=Action.tracking_unsubscribe.text,
+                    callback_data=TrackingActionCallback(
+                        action=Action.tracking_unsubscribe.action, username=username
+                    ).pack(),
+                )
             )
         else:
-            builder.button(
-                text=Action.tracking_subscribe.text,
-                callback_data=TrackingActionCallback(
-                    action=Action.tracking_subscribe.action, username=username
-                ).pack(),
+            builder.row(
+                types.InlineKeyboardButton(
+                    text=Action.tracking_subscribe.text,
+                    callback_data=TrackingActionCallback(
+                        action=Action.tracking_subscribe.action, username=username
+                    ).pack(),
+                )
             )
-        builder.adjust(1)
         return builder.as_markup()
 
     def build_tracking_show_full_keyboard(self, tracking_username: str) -> types.InlineKeyboardMarkup:
@@ -262,17 +275,19 @@ class KeyboardRepository:
 
     def build_tracking_media_paginated_keyboard(self, tracking_media: TrackingMedia, total_count: int, page: int, media_page: int):
         builder = InlineKeyboardBuilder()
-        builder.row(
-            *self.paginate_row(
-                total_count,
-                media_page,
-                TrackingMediaActionCallback(
-                    action=Action.tracking_media_stats.action,
-                    instagram_id=tracking_media.instagram_id
-                ),
-                on_page_count=1
+        if total_count > 1:
+            builder.row(
+                *self.paginate_row(
+                    total_count,
+                    media_page,
+                    TrackingMediaActionCallback(
+                        action=Action.tracking_media_stats.action,
+                        instagram_id=tracking_media.instagram_id
+                    ),
+                    on_page_count=1,
+                    page_key="media_page"
+                )
             )
-        )
         builder.row(
             types.InlineKeyboardButton(
                 text="Назад",
@@ -283,7 +298,6 @@ class KeyboardRepository:
                 ).pack(),
             )
         )
-        builder.adjust(1)
         return builder.as_markup()
 
     def build_tracking_media_keyboard(
@@ -342,17 +356,18 @@ class KeyboardRepository:
                     ).pack(),
                 )
             )
-        builder.row(
-            *self.paginate_row(
-                total_media_count,
-                current_page,
-                TrackingActionCallback(
-                    action=Action.show_tracking_media.action,
-                    username=tracking_medias[0].instagram_username,
-                ),
-                on_page_count=10,
+        if total_media_count > 10:
+            builder.row(
+                *self.paginate_row(
+                    total_media_count,
+                    current_page,
+                    TrackingActionCallback(
+                        action=Action.show_tracking_media.action,
+                        username=tracking_medias[0].instagram_username,
+                    ),
+                    on_page_count=10,
+                )
             )
-        )
         builder.row(
             types.InlineKeyboardButton(
                 text="Назад",
@@ -408,7 +423,7 @@ class KeyboardRepository:
             ).pack(),
         )
         builder.button(
-            text=Action.tracking_new_unsubscribed.text,
+            text=Action.tracking_unsubscribes.text,
             callback_data=TrackingActionCallback(
                 action=Action.tracking_unsubscribes.action, username=username
             ).pack(),
@@ -426,17 +441,18 @@ class KeyboardRepository:
         self, username: str, total_count: int, current_page, on_page_count: int = 10
     ):
         builder = InlineKeyboardBuilder()
-        builder.row(
-            *self.paginate_row(
-                total_count,
-                current_page,
-                TrackingActionCallback(
-                    action=Action.tracking_new_unsubscribed.action,
-                    username=username,
-                ),
-                on_page_count,
+        if total_count > 10:
+            builder.row(
+                *self.paginate_row(
+                    total_count,
+                    current_page,
+                    TrackingActionCallback(
+                        action=Action.tracking_new_unsubscribed.action,
+                        username=username,
+                    ),
+                    on_page_count,
+                )
             )
-        )
         builder.row(
             types.InlineKeyboardButton(
                 text=Action.delete_message.text,
@@ -451,17 +467,18 @@ class KeyboardRepository:
         self, username: str, total_count: int, current_page, on_page_count: int = 10
     ):
         builder = InlineKeyboardBuilder()
-        builder.row(
-            *self.paginate_row(
-                total_count,
-                current_page,
-                TrackingActionCallback(
-                    action=Action.tracking_new_subscribers.action,
-                    username=username,
-                ),
-                on_page_count,
+        if total_count > 10:
+            builder.row(
+                *self.paginate_row(
+                    total_count,
+                    current_page,
+                    TrackingActionCallback(
+                        action=Action.tracking_new_subscribers.action,
+                        username=username,
+                    ),
+                    on_page_count,
+                )
             )
-        )
         builder.row(
             types.InlineKeyboardButton(
                 text=Action.delete_message.text,
@@ -481,17 +498,18 @@ class KeyboardRepository:
         on_page_count: int = 10,
     ):
         builder = InlineKeyboardBuilder()
-        builder.row(
-            *self.paginate_row(
-                total_count,
-                current_page,
-                TrackingActionCallback(
-                    action=action,
-                    username=tracking_username,
-                ),
-                on_page_count,
+        if total_count > 10:
+            builder.row(
+                *self.paginate_row(
+                    total_count,
+                    current_page,
+                    TrackingActionCallback(
+                        action=action,
+                        username=tracking_username,
+                    ),
+                    on_page_count,
+                )
             )
-        )
         builder.row(
             types.InlineKeyboardButton(
                 text="Назад",
@@ -508,6 +526,7 @@ class KeyboardRepository:
         current_page: int,
         callback_data: PaginatedActionCallback,
         on_page_count: int = 50,
+        page_key: str = "page"
     ) -> list[types.InlineKeyboardButton]:
         buttons = []
         total_pages = math.ceil(total_count / on_page_count)
@@ -515,7 +534,7 @@ class KeyboardRepository:
             buttons.append(
                 types.InlineKeyboardButton(
                     text="⬅️",
-                    callback_data=callback_data.replace(page=current_page - 1).pack(),
+                    callback_data=callback_data.replace(**{page_key: current_page - 1}).pack(),
                 )
             )
         buttons.append(
@@ -527,7 +546,7 @@ class KeyboardRepository:
             buttons.append(
                 types.InlineKeyboardButton(
                     text="➡️",
-                    callback_data=callback_data.replace(page=current_page + 1).pack(),
+                    callback_data=callback_data.replace(**{page_key: current_page + 1}).pack(),
                 )
             )
         return buttons

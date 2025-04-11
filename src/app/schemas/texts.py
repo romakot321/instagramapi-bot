@@ -20,11 +20,12 @@ def descape_markdown(text: str) -> str:
     return text
 
 
-def escape_markdown(text: str) -> str:
+def escape_markdown(text: str, escape_all: bool = False) -> str:
     escape_chars = r"_*[]()~`>#+-=|{}.!"
     ret = re.sub(r"([{}])".format(re.escape(escape_chars)), r"\\\1", text)
-    for i in "_*[]()~`>#+-=|{}.!":
-        ret = ret.replace(f"\\{i}\\{i}", i)
+    if not escape_all:
+        for i in "_*[]()~`>#+-=|{}.!":
+            ret = ret.replace(f"\\{i}\\{i}", i)
     return ret
 
 
@@ -106,9 +107,9 @@ _tracking_report_text = """
 
 📊 Статистика от {change.previous_stats_date:%d.%m.%Y %H:%M}
 
-🖼 Количество постов: 🔼{media_count} ({change.media_count_difference})
-🧑‍💻 Количество подписчиков: 🔽{tracking.followers_count} ({change.followers_count_difference})
-⭐️ Количество подписок: 🔼{tracking.following_count} ({change.following_count_difference})
+🖼 Количество постов: {media_count} {media_count_difference}
+🧑‍💻 Количество подписчиков: {tracking.followers_count} {followers_count_difference}
+⭐️ Количество подписок: {tracking.following_count} {following_count_difference}
 """
 
 _tracking_unsubscribe_text = """
@@ -215,7 +216,7 @@ def build_tracking_followers_text(followers: list[str]) -> str:
         return escape_markdown("Список пуст. Возможно, нужно подождать пока данные соберутся")
     return "\n".join(
         f"[{tracking}](https://instagram.com/{tracking})"
-        for tracking in map(lambda i: escape_markdown(i), followers)
+        for tracking in map(lambda i: escape_markdown(i, escape_all=True), followers)
     )
 
 
@@ -224,10 +225,29 @@ def build_tracking_report_text(
     current: InstagramMediaUserStatsSchema,
     tracking: InstagramUserSchema,
 ) -> str:
+    followers_count_difference = "(0)"
+    if change.followers_count_difference > 0:
+        followers_count_difference = f"🔼 (+{change.followers_count_difference})"
+    elif change.followers_count_difference < 0:
+        followers_count_difference = f"🔽 ({change.followers_count_difference})"
+
+    following_count_difference = "(0)"
+    if change.following_count_difference > 0:
+        following_count_difference = f"🔼 (+{change.following_count_difference})"
+    elif change.following_count_difference < 0:
+        following_count_difference = f"🔽 ({change.following_count_difference})"
+
+    media_count_difference = "(0)"
+    if change.media_count_difference > 0:
+        media_count_difference = f"🔼 (+{change.media_count_difference})"
+    elif change.media_count_difference < 0:
+        media_count_difference = f"🔽 ({change.media_count_difference})"
+
+
     text = _tracking_report_text.format(
         media_count=current.count,
-        media_likes=round(current.like_count_sum / current.count, 2),
-        media_comments=round(current.comment_count_sum / current.count, 2),
+        media_likes=round(current.like_count_sum / current.count, 2) if current.count else 0,
+        media_comments=round(current.comment_count_sum / current.count, 2) if current.count else 0,
         media_coeff=round(
             (current.like_count_sum + current.comment_count_sum)
             / tracking.followers_count
@@ -236,6 +256,9 @@ def build_tracking_report_text(
         ),
         change=change,
         tracking=tracking,
+        followers_count_difference=followers_count_difference,
+        following_count_difference=following_count_difference,
+        media_count_difference=media_count_difference
     )
     return escape_markdown(text)
 
@@ -285,7 +308,7 @@ _subscription_info_text = """
 Подписка активна до {subscription.expire_at:%d.%m.%Y %H:%M}
 """
 
-subscription_paywall_text = """
+_subscription_paywall_text = """
 Ты уже используешь нашего бота для отслеживания базовой статистики, и это отлично! Но представь, как можно улучшить результаты с Premium-функциями.
 
 **С Premium ты получишь:**
@@ -297,6 +320,7 @@ subscription_paywall_text = """
 
 **Повысь эффективность своего Instagram — открой для себя возможность Premium уже сейчас!**
 """
+subscription_paywall_text = escape_markdown(_subscription_paywall_text)
 
 
 def build_subscription_info_text(subscription: Subscription) -> str:

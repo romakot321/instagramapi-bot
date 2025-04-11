@@ -1,5 +1,6 @@
 import datetime as dt
 import types
+from loguru import logger
 from typing import Annotated
 
 from aiogram3_di import Depends
@@ -98,7 +99,7 @@ class TrackingFollowerService:
                 ),
                 parse_mode="MarkdownV2"
             )
-        return build_aiogram_method(query.from_user.id, message, use_edit=False)
+        return build_aiogram_method(None, tg_object=query, message=message, use_edit="отчет" not in query.message.text.lower())
 
     async def handle_tracking_new_unsubscribes(
         self, query: CallbackQuery, data: TrackingActionCallback
@@ -130,4 +131,4 @@ class TrackingFollowerService:
                 ),
                 parse_mode="MarkdownV2"
             )
-        return build_aiogram_method(query.from_user.id, message, use_edit=False)
+        return build_aiogram_method(None, tg_object=query, message=message, use_edit="отчет" not in query.message.text.lower())

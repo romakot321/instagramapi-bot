@@ -27,7 +27,7 @@ async def paywall(
         service: SubscriptionService = Depends(SubscriptionService.depend)
 ):
     tariffs = await service.get_tariffs_list()
-    if tariff_id is not None:
+    if tariff_id is not None and tariff_id > 0:
         tariffs = [t for t in tariffs if t.id == tariff_id]
     return templates.TemplateResponse(
         "paywall.html",

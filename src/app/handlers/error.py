@@ -44,6 +44,7 @@ def setup_error_handlers(dispatcher: Dispatcher):
             event: ErrorEvent,
             query: CallbackQuery
     ):
+        logger.exception(event.exception)
         proper_messages = ['message is not modified', 'canceled by new editMessageMedia request', 'message to delete not found', 'message to edit not found', 'bot was blocked by the user']
         if not any(msg in event.exception.message for msg in proper_messages):
             logger.exception(event.exception)
