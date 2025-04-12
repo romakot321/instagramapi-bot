@@ -74,9 +74,7 @@ class TrackingFollowingService:
         following_diff = await self.instagram_repository.get_user_following_difference(
             data.username
         )
-        report_date = dt.datetime.now().replace(
-            hour=0, minute=0, second=0
-        ) - dt.timedelta(days=7)
+        report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
         subscribes_usernames = []
         for diff in following_diff:
@@ -106,9 +104,7 @@ class TrackingFollowingService:
         following_diff = await self.instagram_repository.get_user_following_difference(
             data.username
         )
-        report_date = dt.datetime.now().replace(
-            hour=0, minute=0, second=0
-        ) - dt.timedelta(days=7)
+        report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
         unsubscribes_usernames = []
         for diff in following_diff:
