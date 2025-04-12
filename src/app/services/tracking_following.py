@@ -92,7 +92,7 @@ class TrackingFollowingService:
             message = TextMessage(text="Подписок нет")
         else:
             message = TextMessage(
-                text=build_tracking_following_text(paginated_subscribes[data.page]),
+                text=build_tracking_following_text(paginated_subscribes[data.page - 1]),
                 reply_markup=self.keyboard_repository.build_tracking_new_subscribes_keyboard(
                     data.username, len(subscribes_usernames), data.page, on_page_count=10
                 ),
@@ -124,7 +124,7 @@ class TrackingFollowingService:
             message = TextMessage(text="Отписок нет")
         else:
             message = TextMessage(
-                text=build_tracking_following_text(paginated_subscribes[data.page]),
+                text=build_tracking_following_text(paginated_subscribes[data.page - 1]),
                 reply_markup=self.keyboard_repository.build_tracking_new_unsubscribes_keyboard(
                     data.username, len(unsubscribes_usernames), data.page, on_page_count=10
                 ),

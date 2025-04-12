@@ -10,6 +10,10 @@ class SupportService:
     def __init__(self):
         pass
 
+    @classmethod
+    async def init(cls):
+        return cls()
+
     async def handle_support_menu(self, msg: Message) -> TelegramMethod:
         message = TextMessage(
             text=support_text,

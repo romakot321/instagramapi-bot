@@ -6,6 +6,7 @@ class ApiException(Exception):
         self.message = message
 
     def detail(self) -> str | None:
+        print(self.message)
         try:
             data = json.loads(self.message)
         except json.decoder.JSONDecodeError:

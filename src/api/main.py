@@ -45,7 +45,7 @@ def register_cors(application):
     )
 
 
-@repeat_every(seconds=3600 * 2, wait_first=3600 * 2)
+@repeat_every(seconds=3600 * 2, wait_first=1)
 async def send_reports():
     async with UserService() as user_service:
         users = await user_service.list(count=10000000)
@@ -112,6 +112,7 @@ def init_web_application():
 
 
 def run() -> FastAPI:
+    logger.disable("sqlalchemy_service")
     application = init_web_application()
     return application
 

@@ -29,7 +29,7 @@ class InstagramRepository:
                 return "Профиль не найден"
             elif resp.status == 400:
                 return (await resp.json())["detail"]
-            raise ApiException(await resp.json())
+            raise ApiException(await resp.text())
 
     async def get_user_info(self, username: str) -> InstagramUserSchema | None:
         async with ClientSession(base_url=self.API_URL) as session:
