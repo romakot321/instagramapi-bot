@@ -5,15 +5,15 @@ from urllib import parse
 from aiogram3_di import Depends
 
 from aiogram import Bot
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram import types as types
-from aiogram.methods import EditMessageText
+from aiogram.methods import EditMessageText, TelegramMethod
 
 from app.repositories.instagram import InstagramRepository
 from app.repositories.keyboard import KeyboardRepository
 from app.repositories.user import UserRepository
 from app.schemas.action_callback import Action
-from app.schemas.message import TextMessage
+from app.schemas.message import PhotoMessage, TextMessage
 from app.schemas.texts import build_start_text
 from app.services.utils import build_aiogram_method
 
@@ -44,28 +44,32 @@ class UserService:
             keyboard_repository=keyboard_repository,
         )
 
-    async def _handle_new_user(self, tg_object: Message | CallbackQuery):
+    async def _handle_new_user(self, tg_object: Message | CallbackQuery) -> list[TelegramMethod]:
         await self.user_repository.create(
             telegram_id=tg_object.from_user.id,
             telegram_name=tg_object.from_user.full_name,
             telegram_username=tg_object.from_user.username
         )
-        message = TextMessage(
-            text=build_start_text(tg_object.from_user.id),
+        message1 = PhotoMessage(
+            photo=FSInputFile("static/start.jpg"),
             reply_markup=self.keyboard_repository.build_main_keyboard(),
+        )
+        message2 = TextMessage(
+            text=build_start_text(tg_object.from_user.id),
+            reply_markup=self.keyboard_repository.build_to_add_tracking_keyboard(),
             parse_mode="MarkdownV2",
         )
-        return build_aiogram_method(tg_object.from_user.id, message)
+        return [build_aiogram_method(tg_object.from_user.id, message1), build_aiogram_method(tg_object.from_user.id, message2)]
 
-    async def _handle_main_menu_show(self, tg_object: Message | CallbackQuery):
+    async def _handle_main_menu_show(self, tg_object: Message | CallbackQuery) -> list[TelegramMethod]:
         message = TextMessage(
             text=build_start_text(tg_object.from_user.id),
             reply_markup=self.keyboard_repository.build_to_add_tracking_keyboard(),
             parse_mode="MarkdownV2"
         )
-        return build_aiogram_method(None, tg_object=tg_object, message=message)
+        return [build_aiogram_method(None, tg_object=tg_object, message=message)]
 
-    async def handle_user_start(self, tg_object: Message | CallbackQuery):
+    async def handle_user_start(self, tg_object: Message | CallbackQuery) -> list[TelegramMethod]:
         if (
             await self.user_repository.get_by_telegram_id(tg_object.from_user.id)
         ) is None:

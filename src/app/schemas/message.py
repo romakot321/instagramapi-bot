@@ -45,7 +45,7 @@ class VideoMessage(Message):
 
 class PhotoMessage(Message):
     caption: str | None = None
-    photo: types.BufferedInputFile | str
+    photo: types.BufferedInputFile | types.FSInputFile | str
     reply_markup: types.InlineKeyboardMarkup | types.ReplyKeyboardMarkup | None = None
     parse_mode: str | None = None
 

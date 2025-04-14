@@ -18,8 +18,8 @@ async def start_command(
     bot: Bot,
     user_service: Annotated[UserService, Depends(UserService.init)],
 ):
-    method = await user_service.handle_user_start(message)
-    await bot(method)
+    for method in await user_service.handle_user_start(message):
+        await bot(method)
 
 
 @router.callback_query(ActionCallback.filter(F.action == Action.main_menu.action))
@@ -28,8 +28,8 @@ async def main_menu(
     bot: Bot,
     user_service: Annotated[UserService, Depends(UserService.init)],
 ):
-    method = await user_service.handle_user_start(callback_query)
-    await bot(method)
+    for method in await user_service.handle_user_start(callback_query):
+        await bot(method)
 
 
 @router.callback_query(ActionCallback.filter(F.action == Action.delete_message.action))
