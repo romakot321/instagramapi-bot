@@ -1,10 +1,12 @@
+import os
 from typing import Annotated
+from aiohttp import ClientSession
 from loguru import logger
 
 from aiogram import F
 from aiogram import Router
 from aiogram import Bot
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import CallbackQuery
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
@@ -26,6 +28,25 @@ async def get_user_reports(
     logger.debug("Sending reports to " + str(message.from_user.id))
     async for method in tracking_service.handle_report_trackings(message):
         await bot(method)
+
+
+@router.message(Command("run"))
+async def create_tracking_report(
+    message: Message,
+    command: CommandObject,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
+):
+    if not command.args:
+        return
+    tracking_username = command.args
+
+    async with ClientSession(base_url=os.getenv("INSTAGRAM_API_URL")) as session:
+        resp = await session.post(f"/api/user/{tracking_username}/report", json={"webhook_url": f"http://instagrambot_app/api/user/{message.from_user.id}/report"})
+        if resp.status != 202:
+            raise ValueError("Failed to send create report request: " + await resp.text())
+
+    await message.answer(f"Сбор данных пользователя {tracking_username} запущен")
 
 
 @router.message(F.text == Action.add_tracking.text)
