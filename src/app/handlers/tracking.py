@@ -50,7 +50,7 @@ async def add_tracking_callback(
     await bot(method)
 
 
-@router.message(F.text.not_in([i.text for i in Action]))
+@router.message(F.text.not_in([i.text for i in Action] + ["/report"]) and F.text.not_contains("/run"))
 async def tracking_create(
     message: Message,
     state: FSMContext,
