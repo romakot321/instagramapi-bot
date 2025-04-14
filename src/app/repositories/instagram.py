@@ -113,9 +113,9 @@ class InstagramRepository:
         return InstagramUserStatsSchema.model_validate(body)
 
     async def get_user_media_info(
-        self, username: str, max_id: str | None = None
+            self, username: str, count: int = 12, max_id: str | None = None
     ) -> InstagramMediaListSchema:
-        params = {"username": username, "count": 10}
+        params = {"username": username, "count": count}
         if max_id is not None:
             params["max_id"] = max_id
         async with ClientSession(base_url=self.API_URL) as session:

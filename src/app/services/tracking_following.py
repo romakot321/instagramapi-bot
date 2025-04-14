@@ -91,7 +91,7 @@ class TrackingFollowingService:
         else:
             message = TextMessage(
                 text=build_tracking_following_text(paginated_subscribes[data.page - 1]),
-                reply_markup=self.keyboard_repository.build_tracking_new_subscribes_keyboard(
+                reply_markup=self.keyboard_repository.build_tracking_subscribtions_keyboard(
                     data.username, len(subscribes_usernames), data.page, on_page_count=10
                 ),
                 parse_mode="MarkdownV2"
@@ -121,7 +121,7 @@ class TrackingFollowingService:
         else:
             message = TextMessage(
                 text=build_tracking_following_text(paginated_subscribes[data.page - 1]),
-                reply_markup=self.keyboard_repository.build_tracking_new_unsubscribes_keyboard(
+                reply_markup=self.keyboard_repository.build_tracking_unsubscribes_keyboard(
                     data.username, len(unsubscribes_usernames), data.page, on_page_count=10
                 ),
                 parse_mode="MarkdownV2"

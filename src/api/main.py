@@ -45,7 +45,7 @@ def register_cors(application):
     )
 
 
-@repeat_every(seconds=3600 * 2, wait_first=1)
+@repeat_every(seconds=3600 * 2, wait_first=1, raise_exceptions=True)
 async def send_reports():
     async with UserService() as user_service:
         users = await user_service.list(count=10000000)
@@ -55,6 +55,7 @@ async def send_reports():
     user_id_to_subscriptions = {user.telegram_id: [s for s in subscriptions if s.user_telegram_id == user.telegram_id] for user in users}
     for user in users:
         for subscription in user_id_to_subscriptions.get(user.telegram_id, []):
+            logger.debug(subscription.tracking_username)
             if subscription.tracking_username is None:
                 continue
             # if now.hour * 3600 % int(subscription.tariff.tracking_report_interval) == 0:

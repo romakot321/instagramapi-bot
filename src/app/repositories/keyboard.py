@@ -464,6 +464,58 @@ class KeyboardRepository:
         )
         return builder.as_markup()
 
+    def build_tracking_subscribtions_keyboard(
+        self, username: str, total_count: int, current_page, on_page_count: int = 10
+    ):
+        builder = InlineKeyboardBuilder()
+        if total_count > 10:
+            builder.row(
+                *self.paginate_row(
+                    total_count,
+                    current_page,
+                    TrackingActionCallback(
+                        action=Action.tracking_subscribtions.action,
+                        username=username,
+                    ),
+                    on_page_count,
+                )
+            )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.delete_message.text,
+                callback_data=ActionCallback(
+                    action=Action.delete_message.action
+                ).pack(),
+            )
+        )
+        return builder.as_markup()
+
+    def build_tracking_unsubscribes_keyboard(
+        self, username: str, total_count: int, current_page, on_page_count: int = 10
+    ):
+        builder = InlineKeyboardBuilder()
+        if total_count > 10:
+            builder.row(
+                *self.paginate_row(
+                    total_count,
+                    current_page,
+                    TrackingActionCallback(
+                        action=Action.tracking_unsubscribes.action,
+                        username=username,
+                    ),
+                    on_page_count,
+                )
+            )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.delete_message.text,
+                callback_data=ActionCallback(
+                    action=Action.delete_message.action
+                ).pack(),
+            )
+        )
+        return builder.as_markup()
+
     def build_tracking_new_subscribes_keyboard(
         self, username: str, total_count: int, current_page, on_page_count: int = 10
     ):
@@ -489,6 +541,8 @@ class KeyboardRepository:
             )
         )
         return builder.as_markup()
+
+
 
     def build_paginated_with_to_tracking_show(
         self,

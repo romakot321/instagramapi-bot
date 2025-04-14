@@ -66,7 +66,7 @@ class TrackingMediaService:
         tracking_medias = []
         while not (
             info := await self.instagram_repository.get_user_media_info(
-                username, max_id=max_id
+                username, count=12, max_id=max_id
             )
         ).last_page:
             for schema in info.items:
@@ -94,7 +94,7 @@ class TrackingMediaService:
         tracking_medias = []
         while not (
             info := await self.instagram_repository.get_user_media_info(
-                username, max_id=max_id
+                username, count=12, max_id=max_id
             )
         ).last_page:
             for schema in info.items:
