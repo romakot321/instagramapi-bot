@@ -45,7 +45,7 @@ def register_cors(application):
     )
 
 
-@repeat_every(seconds=3600 * 2, wait_first=1, raise_exceptions=True)
+@repeat_every(seconds=3600 * 2, wait_first=3600, raise_exceptions=True)
 async def send_reports():
     async with UserService() as user_service:
         users = await user_service.list(count=10000000)

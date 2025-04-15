@@ -89,7 +89,7 @@ async def dispatcher_startup():
         )
     except Exception as e:
         logger.error(e)
-    else:
+    finally:
         logger.info("Bot started")
 
 
@@ -132,6 +132,7 @@ def setup_bot(application: FastAPI):
         application.add_route(
             path=BOT_WEBHOOK_PATH, route=handle_webhook, methods=["POST"]
         )
+        logger.info("Bot webhook route added")
     else:
         def on_startup():
             asyncio.create_task(bot.delete_webhook())

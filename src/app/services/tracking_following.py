@@ -77,7 +77,7 @@ class TrackingFollowingService:
         report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
         subscribes_usernames = []
-        for diff in following_diff:
+        for diff in following_diff[:1]:
             if diff.created_at < report_date:
                 continue
             subscribes_usernames += diff.subscribes_usernames
@@ -107,7 +107,7 @@ class TrackingFollowingService:
         report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
         unsubscribes_usernames = []
-        for diff in following_diff:
+        for diff in following_diff[:1]:
             if diff.created_at < report_date:
                 continue
             unsubscribes_usernames += diff.unsubscribes_usernames

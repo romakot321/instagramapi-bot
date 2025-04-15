@@ -64,11 +64,11 @@ class TrackingMediaService:
     async def _load_tracking_medias(self, username: str) -> list[TrackingMedia]:
         max_id = None
         tracking_medias = []
-        while not (
-            info := await self.instagram_repository.get_user_media_info(
+        while True:
+            info = await self.instagram_repository.get_user_media_info(
                 username, count=12, max_id=max_id
             )
-        ).last_page:
+            logger.debug("Load tracking response: " + str(info))
             for schema in info.items:
                 model = await self.tracking_media_repository.create(
                     instagram_username=username,
@@ -81,6 +81,8 @@ class TrackingMediaService:
                     updated_at=dt.datetime.now(),
                 )
                 tracking_medias.append(model)
+            if info.last_page:
+                break
             max_id = info.next_max_id
         return tracking_medias
 
@@ -135,6 +137,8 @@ class TrackingMediaService:
             return None
         if not tracking_medias:
             tracking_medias = await self._load_tracking_medias(username)
+            logger.debug("Loadded medias: " + str(tracking_medias))
+            logger.debug(f"Paginated(page: {page}, count: {count}): " + str(tracking_medias[(page - 1) * count : page * count]))
             return tracking_medias[(page - 1) * count : page * count], len(
                 tracking_medias
             )

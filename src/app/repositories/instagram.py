@@ -102,11 +102,14 @@ class InstagramRepository:
             body = await resp.json()
         return [InstagramUserSchema.model_validate(user) for user in body]
 
-    async def get_user_stats(self, username: str) -> InstagramUserStatsSchema:
+    async def get_user_stats(self, username: str) -> InstagramUserStatsSchema | None:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(
                 "/api/user/" + username + "/stats", params={"days": 7}
             )
+            if resp.status == 400:
+                body = await resp.json()
+                return body.get("detail", "Внутреняя ошибка")
             if resp.status != 200:
                 raise ApiException(await resp.text())
             body = await resp.json()
@@ -148,11 +151,14 @@ class InstagramRepository:
 
     async def get_media_user_stats(
         self, username: str, days: int = 7
-    ) -> InstagramMediaUserStatsSchema:
+    ) -> InstagramMediaUserStatsSchema | str:
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(
                 "/api/media/stats", params={"days": days, "username": username}
             )
+            if resp.status == 400:
+                body = await resp.json()
+                return body.get("detail", "Внутреняя ошибка")
             if resp.status != 200:
                 raise ApiException(await resp.text())
             body = await resp.json()

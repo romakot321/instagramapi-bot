@@ -35,18 +35,18 @@ async def create_tracking_report(
     message: Message,
     command: CommandObject,
     bot: Bot,
-    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):
+    logger.debug(command.args)
     if not command.args:
         return
     tracking_username = command.args
 
     async with ClientSession(base_url=os.getenv("INSTAGRAM_API_URL")) as session:
         resp = await session.post(f"/api/user/{tracking_username}/report", json={"webhook_url": f"http://instagrambot_app/api/user/{message.from_user.id}/report"})
-        if resp.status != 202:
+        if resp.status != 201:
             raise ValueError("Failed to send create report request: " + await resp.text())
 
-    await message.answer(f"Сбор данных пользователя {tracking_username} запущен")
+    await bot.send_message(chat_id=message.from_user.id, text=f"Сбор данных пользователя {tracking_username} запущен")
 
 
 @router.message(F.text == Action.add_tracking.text)
@@ -71,7 +71,7 @@ async def add_tracking_callback(
     await bot(method)
 
 
-@router.message(F.text.not_in([i.text for i in Action] + ["/report"]) and F.text.not_contains("/run"))
+@router.message(F.text.not_in([i.text for i in Action]))
 async def tracking_create(
     message: Message,
     state: FSMContext,

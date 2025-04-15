@@ -310,12 +310,51 @@ class TrackingService:
     ) -> TelegramMethod:
         user_info = await self.instagram_repository.get_user_info(data.username)
         user_stats = await self.instagram_repository.get_user_stats(data.username)
+        if isinstance(user_stats, str):
+            return build_aiogram_method(
+                None,
+                message=TextMessage(
+                    text=user_stats,
+                    reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
+                        data.username
+                    ),
+                ),
+                tg_object=query,
+                use_edit=True
+            )
+
         weekly_media_stats = await self.instagram_repository.get_media_user_stats(
             data.username, days=7
         )
+        if isinstance(weekly_media_stats, str):
+            return build_aiogram_method(
+                None,
+                message=TextMessage(
+                    text=weekly_media_stats,
+                    reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
+                        data.username
+                    ),
+                ),
+                tg_object=query,
+                use_edit=True
+            )
+
         monthly_media_stats = await self.instagram_repository.get_media_user_stats(
             data.username, days=30
         )
+        if isinstance(monthly_media_stats, str):
+            return build_aiogram_method(
+                None,
+                message=TextMessage(
+                    text=monthly_media_stats,
+                    reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
+                        data.username
+                    ),
+                ),
+                tg_object=query,
+                use_edit=True
+            )
+
         message = TextMessage(
             text=build_tracking_stats_text(
                 user_stats, weekly_media_stats, monthly_media_stats, user_info

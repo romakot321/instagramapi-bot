@@ -542,8 +542,6 @@ class KeyboardRepository:
         )
         return builder.as_markup()
 
-
-
     def build_paginated_with_to_tracking_show(
         self,
         action: str,
