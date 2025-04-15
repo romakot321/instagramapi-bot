@@ -102,7 +102,8 @@ class InstagramRepository:
             body = await resp.json()
         return [InstagramUserSchema.model_validate(user) for user in body]
 
-    async def get_user_stats(self, username: str) -> InstagramUserStatsSchema | None:
+    async def get_user_stats(self, username: str) -> InstagramUserStatsSchema | str:
+        """Return schema or error text"""
         async with ClientSession(base_url=self.API_URL) as session:
             resp = await session.get(
                 "/api/user/" + username + "/stats", params={"days": 7}

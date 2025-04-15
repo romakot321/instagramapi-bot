@@ -236,7 +236,7 @@ class KeyboardRepository:
     def build_tracking_show_full_keyboard(self, tracking_username: str) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
-            text="Посмотреть на кого подписан пользователь",
+            text="Начать следить за пользователем",
             callback_data=SubscriptionActionCallback(
                 action=Action.subscription_add.action,
                 t_id=-1,
@@ -398,6 +398,43 @@ class KeyboardRepository:
     def build_to_trackings_list_keyboard(self) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(**Action.show_trackings.model_dump())
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def build_tracking_stats_keyboard(self, username: str) -> types.InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            text=Action.tracking_new_subscribers.text,
+            callback_data=TrackingActionCallback(
+                action=Action.tracking_new_subscribers.action, username=username
+            ).pack(),
+        )
+        builder.button(
+            text=Action.tracking_new_unsubscribed.text,
+            callback_data=TrackingActionCallback(
+                action=Action.tracking_new_unsubscribed.action, username=username
+            ).pack(),
+        )
+        builder.button(
+            text=Action.tracking_subscribtions.text,
+            callback_data=TrackingActionCallback(
+                action=Action.tracking_subscribtions.action, username=username
+            ).pack(),
+        )
+        builder.button(
+            text=Action.tracking_unsubscribes.text,
+            callback_data=TrackingActionCallback(
+                action=Action.tracking_unsubscribes.action, username=username
+            ).pack(),
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text="Назад",
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_show.action, username=tracking_username
+                ).pack(),
+            )
+        )
         builder.adjust(1)
         return builder.as_markup()
 

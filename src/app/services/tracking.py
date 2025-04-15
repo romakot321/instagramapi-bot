@@ -359,7 +359,7 @@ class TrackingService:
             text=build_tracking_stats_text(
                 user_stats, weekly_media_stats, monthly_media_stats, user_info
             ),
-            reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
+            reply_markup=self.keyboard_repository.build_tracking_stats_keyboard(
                 data.username
             ),
             parse_mode="MarkdownV2",
