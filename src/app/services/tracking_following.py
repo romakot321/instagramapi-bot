@@ -12,7 +12,7 @@ from app.repositories.instagram import InstagramRepository
 from app.repositories.keyboard import KeyboardRepository
 from app.repositories.subscription import SubscriptionRepository
 from app.repositories.tracking import TrackingRepository
-from app.schemas.action_callback import TrackingActionCallback
+from app.schemas.action_callback import TrackingActionCallback, TrackingReportCallback
 from app.schemas.message import TextMessage
 from app.schemas.texts import (
     build_tracking_following_text,
@@ -69,7 +69,7 @@ class TrackingFollowingService:
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
     async def handle_tracking_new_subscribes(
-        self, query: CallbackQuery, data: TrackingActionCallback
+        self, query: CallbackQuery, data: TrackingReportCallback
     ) -> TelegramMethod:
         following_diff = await self.instagram_repository.get_user_following_difference(
             data.username
@@ -77,8 +77,8 @@ class TrackingFollowingService:
         report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
         subscribes_usernames = []
-        for diff in following_diff[:1]:
-            if diff.created_at < report_date:
+        for diff in following_diff:
+            if diff.created_at < report_date or diff.report_id != data.report_id:
                 continue
             subscribes_usernames += diff.subscribes_usernames
         paginated_subscribes = [
@@ -99,7 +99,7 @@ class TrackingFollowingService:
         return build_aiogram_method(None, tg_object=query, message=message, use_edit="отчет" not in query.message.text.lower())
 
     async def handle_tracking_new_unsubscribes(
-        self, query: CallbackQuery, data: TrackingActionCallback
+        self, query: CallbackQuery, data: TrackingReportCallback
     ) -> TelegramMethod:
         following_diff = await self.instagram_repository.get_user_following_difference(
             data.username
@@ -107,8 +107,8 @@ class TrackingFollowingService:
         report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
         unsubscribes_usernames = []
-        for diff in following_diff[:1]:
-            if diff.created_at < report_date:
+        for diff in following_diff:
+            if diff.created_at < report_date or diff.report_id != data.report_id:
                 continue
             unsubscribes_usernames += diff.unsubscribes_usernames
         paginated_subscribes = [

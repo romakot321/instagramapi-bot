@@ -12,7 +12,7 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram3_di import Depends
 
-from app.schemas.action_callback import Action, ActionCallback, TrackingActionCallback
+from app.schemas.action_callback import Action, ActionCallback, TrackingActionCallback, TrackingReportCallback
 from app.schemas.forms import TrackingCreateForm
 from app.services.tracking import TrackingService
 
@@ -257,11 +257,11 @@ async def report_trackings(
 
 
 @router.callback_query(
-    TrackingActionCallback.filter(F.action == Action.report_trackings.action)
+    TrackingReportCallback.filter(F.action == Action.report_trackings.action)
 )
 async def report_tracking(
     callback_query: CallbackQuery,
-    callback_data: TrackingActionCallback,
+    callback_data: TrackingReportCallback,
     bot: Bot,
     tracking_service: Annotated[TrackingService, Depends(TrackingService.init)],
 ):

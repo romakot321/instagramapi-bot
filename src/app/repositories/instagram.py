@@ -12,6 +12,7 @@ from app.schemas.instagram import (
     InstagramUserFollowDifferenceSchema,
     InstagramUserFollowersDifferenceSchema,
     InstagramUserFollowingDifferenceSchema,
+    InstagramUserReportSchema,
     InstagramUserSchema,
     InstagramUserStatsSchema,
 )
@@ -40,6 +41,17 @@ class InstagramRepository:
             elif resp.status == 404:
                 return None
             raise ApiException(await resp.text())
+
+    async def get_user_reports(self, username: str) -> list[InstagramUserReportSchema]:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get("/api/user", params={"username": username})
+            if resp.status != 200:
+                raise ApiException(await resp.text())
+            body = await resp.json()
+        return [
+            InstagramUserReportSchema.model_validate(i)
+            for i in body
+        ]
 
     async def get_user_followers_difference(
         self, username: str
