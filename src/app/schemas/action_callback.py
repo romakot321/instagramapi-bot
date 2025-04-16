@@ -92,3 +92,8 @@ class TrackingMediaActionCallback(PaginatedActionCallback, prefix="m_action"):
 class SubscriptionActionCallback(ActionCallback, prefix="s_action"):
     ig_u: str  # Instagram username
     t_id: int  # Tariff id
+
+
+class TrackingReportCallback(PaginatedActionCallback, prefix="t_report"):
+    username: str
+    report_id: int

@@ -24,6 +24,14 @@ class InstagramUserStatsSchema(BaseModel):
     previous_stats_date: dt.datetime
 
 
+class InstagramUserReportSchema(BaseModel):
+    id: int
+    username: str
+    requests_count: int
+    created_at: dt.datetime
+    finished_at: dt.datetime | None = None
+
+
 class InstagramMediaSchema(BaseModel):
     external_id: str
     caption_text: str | None = None
@@ -63,6 +71,7 @@ class InstagramUserFollowersDifferenceSchema(BaseModel):
     username: str
     subscribes_usernames: list[str]
     unsubscribes_usernames: list[str]
+    report_id: int
     created_at: dt.datetime
 
 
@@ -70,6 +79,7 @@ class InstagramUserFollowingDifferenceSchema(BaseModel):
     username: str
     subscribes_usernames: list[str]
     unsubscribes_usernames: list[str]
+    report_id: int
     created_at: dt.datetime
 
 

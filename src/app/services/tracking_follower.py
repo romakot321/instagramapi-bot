@@ -13,7 +13,7 @@ from app.repositories.instagram import InstagramRepository
 from app.repositories.keyboard import KeyboardRepository
 from app.repositories.subscription import SubscriptionRepository
 from app.repositories.tracking import TrackingRepository
-from app.schemas.action_callback import TrackingActionCallback
+from app.schemas.action_callback import TrackingActionCallback, TrackingReportCallback
 from app.schemas.message import TextMessage
 from app.schemas.texts import (
     build_tracking_followers_text,
@@ -70,7 +70,7 @@ class TrackingFollowerService:
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
     async def handle_tracking_new_subscribes(
-        self, query: CallbackQuery, data: TrackingActionCallback
+        self, query: CallbackQuery, data: TrackingReportCallback
     ) -> TelegramMethod:
         followers_diff = await self.instagram_repository.get_user_followers_difference(
             data.username
@@ -78,8 +78,8 @@ class TrackingFollowerService:
         report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
         subscribes_usernames = []
-        for diff in followers_diff[:1]:
-            if diff.created_at < report_date:
+        for diff in followers_diff:
+            if diff.created_at < report_date or diff.report_id != data.report_id:
                 continue
             subscribes_usernames += diff.subscribes_usernames
         paginated_subscribes = [
@@ -108,8 +108,8 @@ class TrackingFollowerService:
         report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
         unsubscribes_usernames = []
-        for diff in followers_diff[:1]:
-            if diff.created_at < report_date:
+        for diff in followers_diff:
+            if diff.created_at < report_date or diff.report_id != data.report_id:
                 continue
             unsubscribes_usernames += diff.unsubscribes_usernames
         paginated_subscribes = [

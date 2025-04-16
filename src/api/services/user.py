@@ -5,6 +5,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_service import BaseService
 
+from api.schemas.user import UserReportSchema
 from app.controller import BotController
 from db.tables import User
 from db import engine
@@ -24,8 +25,8 @@ class UserService[Table: User, int](BaseService):
             if resp.status != 201:
                 raise ValueError("Failed to send create report request: " + await resp.text())
 
-    async def send_report(self, telegram_id: int, username: str):
-        await BotController.send_report(telegram_id, username)
+    async def send_report(self, telegram_id: int, schema: UserReportSchema):
+        await BotController.send_report(telegram_id, schema.username, schema.report_id)
 
     async def create(self, **fields) -> User:
         return await self._create(**fields)

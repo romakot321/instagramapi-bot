@@ -14,7 +14,7 @@ from app.repositories.keyboard import KeyboardRepository
 from app.repositories.subscription import SubscriptionRepository
 from app.repositories.tariff import TariffRepository
 from app.repositories.tracking import TrackingRepository
-from app.schemas.action_callback import Action, TrackingActionCallback
+from app.schemas.action_callback import Action, TrackingActionCallback, TrackingReportCallback
 from app.schemas.forms import TrackingCreateForm
 from app.schemas.instagram import InstagramUserSchema
 from app.schemas.message import TextMessage
@@ -355,12 +355,14 @@ class TrackingService:
                 use_edit=True
             )
 
+        user_reports = await self.instagram_repository.get_user_reports(data.username)
+
         message = TextMessage(
             text=build_tracking_stats_text(
                 user_stats, weekly_media_stats, monthly_media_stats, user_info
             ),
             reply_markup=self.keyboard_repository.build_tracking_stats_keyboard(
-                data.username
+                data.username, user_reports[0].id
             ),
             parse_mode="MarkdownV2",
         )
@@ -469,7 +471,7 @@ class TrackingService:
             yield build_aiogram_method(tg_object.from_user.id, message)
 
     async def handle_report_tracking(
-        self, tg_object: CallbackQuery | Message, data: TrackingActionCallback
+        self, tg_object: CallbackQuery | Message, data: TrackingReportCallback
     ) -> TelegramMethod:
         tracking = await self.tracking_repository.get(tg_object.from_user.id, data.username)
         user_info = await self.instagram_repository.get_user_info(
@@ -484,7 +486,7 @@ class TrackingService:
         message = TextMessage(
             text=build_tracking_report_text(user_stats, media_stats, user_info),
             reply_markup=self.keyboard_repository.build_tracking_report_keyboard(
-                tracking.instagram_username
+                tracking.instagram_username, data.report_id
             ),
             parse_mode="MarkdownV2",
         )

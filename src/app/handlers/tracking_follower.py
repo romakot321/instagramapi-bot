@@ -10,7 +10,7 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram3_di import Depends
 
-from app.schemas.action_callback import Action, ActionCallback, TrackingActionCallback
+from app.schemas.action_callback import Action, ActionCallback, TrackingActionCallback, TrackingReportCallback
 from app.schemas.forms import TrackingCreateForm
 from app.services.tracking_follower import TrackingFollowerService
 
@@ -33,13 +33,13 @@ async def tracking_followers(
 
 
 @router.callback_query(
-    TrackingActionCallback.filter(
+    TrackingReportCallback.filter(
         F.action == Action.tracking_new_subscribers.action
     )
 )
 async def tracking_new_subscribes(
     callback_query: CallbackQuery,
-    callback_data: TrackingActionCallback,
+    callback_data: TrackingReportCallback,
     bot: Bot,
     tracking_follower_service: Annotated[TrackingFollowerService, Depends(TrackingFollowerService.init)],
 ):
@@ -48,13 +48,13 @@ async def tracking_new_subscribes(
 
 
 @router.callback_query(
-    TrackingActionCallback.filter(
+    TrackingReportCallback.filter(
         F.action == Action.tracking_new_unsubscribed.action
     )
 )
 async def tracking_new_unsubscribes(
     callback_query: CallbackQuery,
-    callback_data: TrackingActionCallback,
+    callback_data: TrackingReportCallback,
     bot: Bot,
     tracking_follower_service: Annotated[TrackingFollowerService, Depends(TrackingFollowerService.init)],
 ):

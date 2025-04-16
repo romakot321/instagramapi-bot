@@ -5,52 +5,50 @@ import copy
 import json
 import asyncio
 
-from app.schemas.action_callback import Action, ActionCallback, SubscriptionActionCallback, TrackingActionCallback
+from app.schemas.action_callback import (
+    Action,
+    ActionCallback,
+    SubscriptionActionCallback,
+    TrackingActionCallback,
+    TrackingReportCallback,
+)
 
 
 class BotController:
     __webhook_data = {
-        'update_id': 0,
-        'callback_query': {
-            'id': '1',
-            'from': {
-                'id': None,
-                'is_bot': False,
-                'first_name': '.'
+        "update_id": 0,
+        "callback_query": {
+            "id": "1",
+            "from": {"id": None, "is_bot": False, "first_name": "."},
+            "message": {
+                "message_id": 1,
+                "from": {"id": 1, "is_bot": True, "first_name": "bot"},
+                "chat": {"id": None, "first_name": ".", "type": "private"},
+                "date": 1,
+                "text": ".",
             },
-            'message': {
-                'message_id': 1,
-                'from': {
-                    'id': 1,
-                    'is_bot': True,
-                    'first_name': "bot"
-                },
-                'chat': {
-                    'id': None,
-                    'first_name': '.',
-                    'type': 'private'
-                },
-                'date': 1,
-                'text': '.'
-            },
-            'data': 'action:history',
-            'chat_instance': '1'
-        }
+            "data": "action:history",
+            "chat_instance": "1",
+        },
     }
 
     @classmethod
     def _pack_webhook_data(cls, chat_id: int, data: str) -> str:
         webhookdata = copy.deepcopy(cls.__webhook_data)
-        webhookdata['callback_query']['from']['id'] = chat_id
-        webhookdata['callback_query']['message']['chat']['id'] = chat_id
-        webhookdata['callback_query']['data'] = data
+        webhookdata["callback_query"]["from"]["id"] = chat_id
+        webhookdata["callback_query"]["message"]["chat"]["id"] = chat_id
+        webhookdata["callback_query"]["data"] = data
         return json.dumps(webhookdata)
 
     @classmethod
-    async def send_subscription_created(cls, user_telegram_id: int, tracking_username: str | None):
+    async def send_subscription_created(
+        cls, user_telegram_id: int, tracking_username: str | None
+    ):
         if tracking_username is None:
             tracking_username = ""
-        data = SubscriptionActionCallback(action=Action.subscription_created.action, ig_u=tracking_username, t_id=-1).pack()
+        data = SubscriptionActionCallback(
+            action=Action.subscription_created.action, ig_u=tracking_username, t_id=-1
+        ).pack()
         webhook_data = cls._pack_webhook_data(user_telegram_id, data)
 
         asyncio.create_task(
@@ -71,8 +69,14 @@ class BotController:
         )
 
     @classmethod
-    async def send_report(cls, user_telegram_id: int, tracking_username: str):
-        data = TrackingActionCallback(action=Action.report_trackings.action, username=tracking_username).pack()
+    async def send_report(
+        cls, user_telegram_id: int, tracking_username: str, report_id: int
+    ):
+        data = TrackingReportCallback(
+            action=Action.report_trackings.action,
+            username=tracking_username,
+            report_id=report_id,
+        ).pack()
         webhook_data = cls._pack_webhook_data(user_telegram_id, data)
 
         asyncio.create_task(
@@ -80,4 +84,3 @@ class BotController:
                 app.bot_instance, app.bot_instance.session.json_loads(webhook_data)
             )
         )
-
