@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Доступ к полной статистике</title>
+  <script src="https://telegram.org/js/telegram-web-app.js?57"></script>
   <style>
     html, body {
       height: 100%;
@@ -34,7 +35,7 @@
       align-items: center;
     }
     .badges {
-      margin-top: 50px;
+      margin-top: 80px;
       margin-bottom: 14px;
       display: flex;
       flex-direction: column;
@@ -297,7 +298,7 @@
     <div class="tariffs">
       <!-- Тариф 1 -->
       <label class="tariff-label">
-        <input name="tariff" type="radio" checked>
+        <input name="tariff" type="radio">
         <div class="tariff-content">
           <div class="circle"></div>
           <div class="tariff-info" data-tariff="1" onclick="selectPrice(this)">
@@ -319,7 +320,7 @@
       </label>
       <!-- Тариф 3 -->
       <label class="tariff-label">
-        <input name="tariff" type="radio" data-tariff="3" onclick="selectPrice(this)">
+        <input name="tariff" type="radio" checked data-tariff="3" onclick="selectPrice(this)">
         <div class="tariff-content">
           <span class="save-badge">SAVE 25%</span>
           <div class="circle"></div>
@@ -340,17 +341,10 @@
     window.onload = () => { window.Telegram.WebApp.expand(); window.Telegram.WebApp.requestFullscreen(); }
 
     function selectPrice(el) {
-        document.querySelectorAll('.price-row').forEach(item => {
-            item.classList.remove('active');
-            item.querySelector('input[type="radio"]').checked = false;
-        });
-
-        el.classList.add('active');
-        el.querySelector('input[type="radio"]').checked = true;
     }
 
     function getAccess() {
-        let selectedTariffId = document.querySelector('.price-row.active').dataset.tariff;
+        let selectedTariffId = document.querySelector('input[type=radio]:checked').dataset.tariff;
         pay(selectedTariffId, window.Telegram.WebApp.initDataUnsafe.user.id);
     }
 

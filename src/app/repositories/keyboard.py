@@ -458,7 +458,7 @@ class KeyboardRepository:
             types.InlineKeyboardButton(
                 text="Назад",
                 callback_data=TrackingActionCallback(
-                    action=Action.tracking_show.action, username=tracking_username
+                    action=Action.tracking_show.action, username=username
                 ).pack(),
             )
         )

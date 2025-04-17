@@ -22,7 +22,7 @@ class UserService[Table: User, int](BaseService):
     async def create_report(self, telegram_id: int, username: str):
         async with ClientSession(base_url=self.instagram_api_url) as session:
             resp = await session.post(f"/api/user/{username}/report", json={"webhook_url": f"http://instagrambot_app/api/user/{telegram_id}/report"})
-            if resp.status != 202:
+            if resp.status != 201:
                 raise ValueError("Failed to send create report request: " + await resp.text())
 
     async def send_report(self, telegram_id: int, schema: UserReportSchema):

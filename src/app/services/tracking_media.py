@@ -154,9 +154,9 @@ class TrackingMediaService:
             )
         )[0]
         if (dt.datetime.now() - newest_media.updated_at).total_seconds() >= 12 * 3600:
-            if not update:
-                return None
             tracking_info = await self.instagram_repository.get_user_info(username)
+            if not update and tracking_info.media_count != total_count:
+                return None
             if tracking_info.media_count != total_count:
                 tracking_medias = await self._update_tracking_medias(username)
                 return tracking_medias[(page - 1) * count : page * count], len(
