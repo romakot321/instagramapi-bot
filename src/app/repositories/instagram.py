@@ -176,3 +176,11 @@ class InstagramRepository:
                 raise ApiException(await resp.text())
             body = await resp.json()
         return InstagramMediaUserStatsSchema.model_validate(body)
+
+    async def create_user_report(self, telegram_id: int, username: str) -> InstagramUserReportSchema:
+        async with ClientSession(base_url=os.getenv("INSTAGRAM_API_URL")) as session:
+            resp = await session.post(f"/api/user/{username}/report", json={"webhook_url": f"http://instagrambot_app/api/user/{telegram_id}/report"})
+            if resp.status != 201:
+                raise ApiException(await resp.text())
+            body = await resp.json()
+        return InstagramUserReportSchema.model_validate(body)

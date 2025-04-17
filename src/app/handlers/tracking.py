@@ -61,6 +61,17 @@ async def add_tracking_message(
     await bot(method)
 
 
+@router.callback_query(TrackingActionCallback.filter(F.action == Action.tracking_collect_data.action))
+async def tracking_collect_data(
+    callback_query: CallbackQuery,
+    callback_data: TrackingActionCallback,
+    bot: Bot,
+    tracking_service: Annotated[TrackingService, Depends(TrackingService.init)]
+):
+    method = await tracking_service.handle_tracking_collect_data(callback_query, callback_data)
+    await bot(method)
+
+
 @router.callback_query(ActionCallback.filter(F.action == Action.add_tracking.action))
 async def add_tracking_callback(
     callback_query: CallbackQuery,
