@@ -516,7 +516,7 @@ class TrackingService:
             )
             return build_aiogram_method(None, tg_object=tg_object, message=message)
 
-        tracking_stats = await self.instagram_repository.get_user_stats(data.username)
+        tracking_stats = await self.instagram_repository.get_user_stats_change_from_real(data.username)
         if (
             not isinstance(tracking_stats, str)
             and tracking_stats.followers_count_difference == 0

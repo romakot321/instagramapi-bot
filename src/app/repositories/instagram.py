@@ -128,6 +128,20 @@ class InstagramRepository:
             body = await resp.json()
         return InstagramUserStatsSchema.model_validate(body)
 
+    async def get_user_stats_change_from_real(self, username: str, days: int = 1) -> InstagramUserStatsSchema | str:
+        """Return schema or error text"""
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get(
+                "/api/user/" + username + "/change", params={"days": days}
+            )
+            if resp.status == 400:
+                body = await resp.json()
+                return body.get("detail", "Внутреняя ошибка")
+            if resp.status != 200:
+                raise ApiException(await resp.text())
+            body = await resp.json()
+        return InstagramUserStatsSchema.model_validate(body)
+
     async def get_user_media_info(
             self, username: str, count: int = 12, max_id: str | None = None
     ) -> InstagramMediaListSchema:
