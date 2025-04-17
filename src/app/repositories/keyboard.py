@@ -127,12 +127,13 @@ class KeyboardRepository:
         return builder.as_markup()
 
     def build_tracking_settings_keyboard(
-        self, username: str, tarrifs: list[Tariff]
+        self, username: str, tarrifs: list[Tariff], current_tariff_id: int
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         for tariff in tarrifs:
             builder.button(
-                text="Отслеживать статистику раз в "
+                text=("✅ " if tariff.id == current_tariff_id else "")
+                + "Отслеживать статистику раз в "
                 + humanize.naturaldelta(
                     dt.timedelta(seconds=int(tariff.tracking_report_interval))
                 ),
@@ -155,65 +156,7 @@ class KeyboardRepository:
         self, username: str, subscribed: bool
     ) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.row(
-            types.InlineKeyboardButton(
-                text=Action.tracking_stats.text,
-                callback_data=TrackingActionCallback(
-                    action=Action.tracking_stats.action, username=username
-                ).pack(),
-            )
-        )
-        if subscribed:
-            builder.row(
-                types.InlineKeyboardButton(
-                    text=Action.show_tracking_media.text,
-                    callback_data=TrackingActionCallback(
-                        action=Action.show_tracking_media.action, username=username
-                    ).pack(),
-                )
-            )
-            builder.row(
-                types.InlineKeyboardButton(
-                    text=Action.tracking_followers_following_collision.text,
-                    callback_data=TrackingActionCallback(
-                        action=Action.tracking_followers_following_collision.action,
-                        username=username,
-                    ).pack(),
-                )
-            )
-            builder.row(
-                types.InlineKeyboardButton(
-                    text=Action.tracking_followers_following_difference.text,
-                    callback_data=TrackingActionCallback(
-                        action=Action.tracking_followers_following_difference.action,
-                        username=username,
-                    ).pack(),
-                ),
-                types.InlineKeyboardButton(
-                    text=Action.tracking_following_followers_difference.text,
-                    callback_data=TrackingActionCallback(
-                        action=Action.tracking_following_followers_difference.action,
-                        username=username,
-                    ).pack(),
-                ),
-            )
-            builder.row(
-                types.InlineKeyboardButton(
-                    text=Action.tracking_hidden_followers.text,
-                    callback_data=TrackingActionCallback(
-                        action=Action.tracking_hidden_followers.action,
-                        username=username,
-                    ).pack(),
-                )
-            )
-            builder.row(
-                types.InlineKeyboardButton(
-                    text=Action.tracking_settings.text,
-                    callback_data=TrackingActionCallback(
-                        action=Action.tracking_settings.action, username=username
-                    ).pack(),
-                )
-            )
+        if not subscribed:
             builder.row(
                 types.InlineKeyboardButton(
                     text=Action.tracking_unsubscribe.text,
@@ -222,15 +165,84 @@ class KeyboardRepository:
                     ).pack(),
                 )
             )
-        else:
             builder.row(
                 types.InlineKeyboardButton(
-                    text=Action.tracking_subscribe.text,
+                    text=Action.tracking_stats.text,
                     callback_data=TrackingActionCallback(
-                        action=Action.tracking_subscribe.action, username=username
+                        action=Action.tracking_stats.action, username=username
                     ).pack(),
                 )
             )
+            return builder.as_markup()
+
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.tracking_subscribe.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_subscribe.action, username=username
+                ).pack(),
+            )
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.tracking_collect_data.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_collect_data.action, username=username
+                ).pack(),
+            )
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.show_tracking_media.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.show_tracking_media.action, username=username
+                ).pack(),
+            )
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.tracking_followers_following_collision.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_followers_following_collision.action,
+                    username=username,
+                ).pack(),
+            )
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.tracking_followers_following_difference.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_followers_following_difference.action,
+                    username=username,
+                ).pack(),
+            ),
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.tracking_following_followers_difference.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_following_followers_difference.action,
+                    username=username,
+                ).pack(),
+            ),
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.tracking_hidden_followers.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_hidden_followers.action,
+                    username=username,
+                ).pack(),
+            )
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.tracking_settings.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_settings.action, username=username
+                ).pack(),
+            )
+        )
         return builder.as_markup()
 
     def build_tracking_show_full_keyboard(
@@ -413,25 +425,33 @@ class KeyboardRepository:
             builder.button(
                 text=Action.tracking_new_subscribers.text,
                 callback_data=TrackingReportCallback(
-                    action=Action.tracking_new_subscribers.action, username=username, report_id=last_user_report_id
+                    action=Action.tracking_new_subscribers.action,
+                    username=username,
+                    report_id=last_user_report_id,
                 ).pack(),
             )
             builder.button(
                 text=Action.tracking_new_unsubscribed.text,
                 callback_data=TrackingReportCallback(
-                    action=Action.tracking_new_unsubscribed.action, username=username, report_id=last_user_report_id
+                    action=Action.tracking_new_unsubscribed.action,
+                    username=username,
+                    report_id=last_user_report_id,
                 ).pack(),
             )
             builder.button(
                 text=Action.tracking_subscribtions.text,
                 callback_data=TrackingReportCallback(
-                    action=Action.tracking_subscribtions.action, username=username, report_id=last_user_report_id
+                    action=Action.tracking_subscribtions.action,
+                    username=username,
+                    report_id=last_user_report_id,
                 ).pack(),
             )
             builder.button(
                 text=Action.tracking_unsubscribes.text,
                 callback_data=TrackingReportCallback(
-                    action=Action.tracking_unsubscribes.action, username=username, report_id=last_user_report_id
+                    action=Action.tracking_unsubscribes.action,
+                    username=username,
+                    report_id=last_user_report_id,
                 ).pack(),
             )
         builder.row(
@@ -623,6 +643,21 @@ class KeyboardRepository:
                 ).pack(),
             )
         )
+        return builder.as_markup()
+
+    def build_tracking_buy_requests_keyboard(self, tracking_username: str):
+        builder = InlineKeyboardBuilder()
+        url = "https://" + urlparse(BOT_WEBHOOK_URL).netloc + "/paywall/requests"
+        url += "?tracking_username=" + tracking_username
+        builder.button(
+            text=Action.subscription_add.text,
+            web_app=types.WebAppInfo(url=url),
+        )
+        builder.button(
+            text=Action.tracking_show.text,
+            callback_data=TrackingActionCallback(action=Action.tracking_show.action, username=tracking_username).pack()
+        )
+        builder.adjust(1)
         return builder.as_markup()
 
     def paginate_row(

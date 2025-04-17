@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import exc
 from sqlalchemy_service import BaseService
 
-from api.schemas.subscription import SubscriptionCreateSchema
+from api.schemas.subscription import SubscriptionAddRequestsSchema, SubscriptionCreateSchema
 from app.controller import BotController
 from db.tables import Subscription, Tariff
 from db import engine
@@ -52,8 +52,16 @@ class SubscriptionService[Table: Subscription, int](BaseService):
             expire_at=expire_at,
             tracking_username=schema.tracking_username,
             tariff_id=schema.tariff_id,
+            requests_available=tariff.requests_balance
         )
         await self._commit()
+        await BotController.send_subscription_created(schema.user_telegram_id, schema.tracking_username)
+        return model
+
+    async def add_requests(self, schema: SubscriptionAddRequestsSchema) -> Subscription:
+        tariff = await self.get_tariff(schema.tariff_id)
+        subscription = await self.get(schema.user_telegram_id, schema.tracking_username)
+        model = await self.update(subscription.id, requests_available=tariff.requests_balance)
         await BotController.send_subscription_created(schema.user_telegram_id, schema.tracking_username)
         return model
 
@@ -71,8 +79,8 @@ class SubscriptionService[Table: Subscription, int](BaseService):
     async def list(self, page=None, count=None) -> list[Subscription]:
         return list(await self._get_list(page=page, count=count, select_in_load=Subscription.tariff))
 
-    async def get(self, model_id: int) -> Subscription:
-        return await self._get_one(id=model_id)
+    async def get(self, user_telegram_id: int, tracking_username: str) -> Subscription:
+        return await self._get_one(user_telegram_id=user_telegram_id, tracking_username=tracking_username)
 
     async def update(self, model_id: int, **fields) -> Subscription:
         return await self._update(model_id, **fields)

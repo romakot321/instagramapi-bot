@@ -14,7 +14,11 @@ from app.repositories.keyboard import KeyboardRepository
 from app.repositories.subscription import SubscriptionRepository
 from app.repositories.tariff import TariffRepository
 from app.repositories.tracking import TrackingRepository
-from app.schemas.action_callback import Action, TrackingActionCallback, TrackingReportCallback
+from app.schemas.action_callback import (
+    Action,
+    TrackingActionCallback,
+    TrackingReportCallback,
+)
 from app.schemas.forms import TrackingCreateForm
 from app.schemas.instagram import InstagramUserSchema
 from app.schemas.message import TextMessage
@@ -159,11 +163,13 @@ class TrackingService:
                 creator_telegram_id=query.from_user.id,
             )
             message = TextMessage(
-                text=build_tracking_subscribe_text(data.username, int(subscription.tariff.tracking_report_interval)),
+                text=build_tracking_subscribe_text(
+                    data.username, int(subscription.tariff.tracking_report_interval)
+                ),
                 reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
                     data.username
                 ),
-                parse_mode="MarkdownV2"
+                parse_mode="MarkdownV2",
             )
 
         return build_aiogram_method(None, tg_object=query, message=message)
@@ -212,10 +218,11 @@ class TrackingService:
         subscription = await self.subscription_repository.get(
             user_telegram_id=query.from_user.id, tracking_username=data.username
         )
-        tariffs = [t for t in tariffs if t.id != subscription.tariff_id]
         message = TextMessage(
             text="Настройки отслеживания пользователя " + data.username,
-            reply_markup=self.keyboard_repository.build_tracking_settings_keyboard(data.username, tariffs)
+            reply_markup=self.keyboard_repository.build_tracking_settings_keyboard(
+                data.username, tariffs, subscription.tariff_id
+            ),
         )
         return build_aiogram_method(None, tg_object=query, message=message)
 
@@ -296,7 +303,9 @@ class TrackingService:
             return self._handle_show_tracking_not_found(tg_object, data.username)
         message = TextMessage(
             text=build_tracking_info_masked_text(info),
-            reply_markup=self.keyboard_repository.build_tracking_show_full_keyboard(data.username),
+            reply_markup=self.keyboard_repository.build_tracking_show_full_keyboard(
+                data.username
+            ),
             parse_mode="MarkdownV2",
         )
         return build_aiogram_method(
@@ -320,7 +329,7 @@ class TrackingService:
                     ),
                 ),
                 tg_object=query,
-                use_edit=True
+                use_edit=True,
             )
 
         weekly_media_stats = await self.instagram_repository.get_media_user_stats(
@@ -336,7 +345,7 @@ class TrackingService:
                     ),
                 ),
                 tg_object=query,
-                use_edit=True
+                use_edit=True,
             )
 
         monthly_media_stats = await self.instagram_repository.get_media_user_stats(
@@ -352,7 +361,7 @@ class TrackingService:
                     ),
                 ),
                 tg_object=query,
-                use_edit=True
+                use_edit=True,
             )
 
         user_reports = await self.instagram_repository.get_user_reports(data.username)
@@ -385,7 +394,7 @@ class TrackingService:
                 len(info.follow_usernames),
                 data.page,
             ),
-            parse_mode="MarkdownV2"
+            parse_mode="MarkdownV2",
         )
         return build_aiogram_method(None, tg_object=query, message=message)
 
@@ -404,7 +413,7 @@ class TrackingService:
                 len(info.follow_usernames),
                 data.page,
             ),
-            parse_mode="MarkdownV2"
+            parse_mode="MarkdownV2",
         )
         return build_aiogram_method(None, tg_object=query, message=message)
 
@@ -423,16 +432,14 @@ class TrackingService:
                 len(info.follow_usernames),
                 data.page,
             ),
-            parse_mode="MarkdownV2"
+            parse_mode="MarkdownV2",
         )
         return build_aiogram_method(None, tg_object=query, message=message)
 
     async def handle_tracking_hidden_followers(
         self, query: CallbackQuery, data: TrackingActionCallback
     ) -> TelegramMethod:
-        info = await self.instagram_repository.get_user_hidden_followers(
-            data.username
-        )
+        info = await self.instagram_repository.get_user_hidden_followers(data.username)
         usernames = info.follow_usernames[(data.page - 1) * 10 : data.page * 10]
         message = TextMessage(
             text=build_tracking_followers_text(usernames),
@@ -442,7 +449,7 @@ class TrackingService:
                 len(info.follow_usernames),
                 data.page,
             ),
-            parse_mode="MarkdownV2"
+            parse_mode="MarkdownV2",
         )
         return build_aiogram_method(None, tg_object=query, message=message)
 
@@ -473,7 +480,9 @@ class TrackingService:
     async def handle_report_tracking(
         self, tg_object: CallbackQuery | Message, data: TrackingReportCallback
     ) -> TelegramMethod:
-        tracking = await self.tracking_repository.get(tg_object.from_user.id, data.username)
+        tracking = await self.tracking_repository.get(
+            tg_object.from_user.id, data.username
+        )
         user_info = await self.instagram_repository.get_user_info(
             tracking.instagram_username
         )
@@ -491,3 +500,51 @@ class TrackingService:
             parse_mode="MarkdownV2",
         )
         return build_aiogram_method(tg_object.from_user.id, message)
+
+    async def handle_tracking_collect_data(
+        self, tg_object: CallbackQuery, data: TrackingActionCallback
+    ):
+        user_subscription = await self.subscription_repository.get(
+            tg_object.from_user.id, data.username
+        )
+        if user_subscription.requests_available <= 0:
+            message = TextMessage(
+                text="У вас закончился баланс запросов",
+                reply_markup=self.keyboard_repository.build_tracking_buy_requests_keyboard(
+                    data.username
+                ),
+            )
+            return build_aiogram_method(None, tg_object=tg_object, message=message)
+
+        tracking_stats = await self.instagram_repository.get_user_stats(data.username)
+        if (
+            not isinstance(tracking_stats, str)
+            and tracking_stats.followers_count_difference == 0
+            and tracking_stats.following_count_difference == 0
+            and tracking_stats.media_count_difference == 0
+        ):
+            message = TextMessage(
+                text="Данные не изменились",
+                reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
+                    data.username, button_text="Назад"
+                ),
+            )
+            return build_aiogram_method(None, tg_object=tg_object, message=message)
+
+        await self.instagram_repository.create_user_report(
+            tg_object.from_user.id, data.username
+        )
+        await self.subscription_repository.update(
+            user_subscription.id,
+            requests_available=user_subscription.requests_available - 1,
+        )
+        message = TextMessage(
+            text="Сбор данных пользователя "
+            + data.username
+            + " запущен. По завершению вам придет отчет. Осталось запросов: "
+            + str(user_subscription.requests_available - 1),
+            reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
+                data.username, button_text="Назад"
+            ),
+        )
+        return build_aiogram_method(None, tg_object=tg_object, message=message)

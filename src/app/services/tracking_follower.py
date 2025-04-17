@@ -83,7 +83,7 @@ class TrackingFollowerService:
                 continue
             subscribes_usernames += diff.subscribes_usernames
         paginated_subscribes = [
-            subscribes_usernames[i : i + 10]
+            subscribes_usernames[i : i + 25]
             for i in range(0, len(subscribes_usernames), 3)
         ]
 
@@ -93,7 +93,7 @@ class TrackingFollowerService:
             message = TextMessage(
                 text=build_tracking_followers_text(paginated_subscribes[data.page - 1]),
                 reply_markup=self.keyboard_repository.build_tracking_new_subscribes_keyboard(
-                    data.username, len(subscribes_usernames), data.page, on_page_count=10
+                    data.username, len(subscribes_usernames), data.page, on_page_count=25
                 ),
                 parse_mode="MarkdownV2"
             )
@@ -113,7 +113,7 @@ class TrackingFollowerService:
                 continue
             unsubscribes_usernames += diff.unsubscribes_usernames
         paginated_subscribes = [
-            unsubscribes_usernames[i : i + 10]
+            unsubscribes_usernames[i : i + 25]
             for i in range(0, len(unsubscribes_usernames), 3)
         ]
 
@@ -123,7 +123,7 @@ class TrackingFollowerService:
             message = TextMessage(
                 text=build_tracking_followers_text(paginated_subscribes[data.page - 1]),
                 reply_markup=self.keyboard_repository.build_tracking_new_unsubscribes_keyboard(
-                    data.username, len(unsubscribes_usernames), data.page, on_page_count=10
+                    data.username, len(unsubscribes_usernames), data.page, on_page_count=25
                 ),
                 parse_mode="MarkdownV2"
             )

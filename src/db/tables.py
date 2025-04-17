@@ -79,6 +79,7 @@ class Tariff(BaseMixin, Base):
 
     payment_amount: M[int] = column(unique=True)
     access_days: M[int]
+    requests_balance: M[int]
     tracking_report_interval: M[str] = column(doc="В секундах")
 
     subscriptions: M[list["Subscription"]] = relationship(
@@ -107,6 +108,7 @@ class Subscription(BaseMixin, Base):
     tracking_username: M[str | None]
     user_telegram_id: M[int] = column(ForeignKey("users.telegram_id", ondelete="CASCADE"))
     renewal_enabled: M[bool] = column(server_default=true())
+    requests_available: M[int]
 
     user: M["User"] = relationship(back_populates="subscriptions", lazy="selectin")
     tariff: M["Tariff"] = relationship(back_populates="subscriptions", lazy="selectin")
