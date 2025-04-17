@@ -58,9 +58,9 @@ async def send_reports():
             logger.debug(subscription.tracking_username)
             if subscription.tracking_username is None:
                 continue
-            # if now.hour * 3600 % int(subscription.tariff.tracking_report_interval) == 0:
-            #     await UserService.create_report(user.telegram_id, subscription.tracking_username)
-            await UserService.create_report(user.telegram_id, subscription.tracking_username)
+            if now.hour * 3600 % int(subscription.tariff.tracking_report_interval) == 0:
+                await UserService.create_report(user.telegram_id, subscription.tracking_username)
+            # await UserService.create_report(user.telegram_id, subscription.tracking_username)
 
 
 @asynccontextmanager

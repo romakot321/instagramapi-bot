@@ -44,7 +44,8 @@ async def create_tracking_report(
     async with ClientSession(base_url=os.getenv("INSTAGRAM_API_URL")) as session:
         resp = await session.post(f"/api/user/{tracking_username}/report", json={"webhook_url": f"http://instagrambot_app/api/user/{message.from_user.id}/report"})
         if resp.status != 201:
-            raise ValueError("Failed to send create report request: " + await resp.text())
+            await bot.send_message(chat_id=message.from_user.id, text=f"Ошибка при запуске сбора: " + await resp.text())
+            return
 
     await bot.send_message(chat_id=message.from_user.id, text=f"Сбор данных пользователя {tracking_username} запущен")
 
