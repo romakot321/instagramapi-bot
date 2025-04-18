@@ -62,12 +62,19 @@ class UserService:
         return [build_aiogram_method(tg_object.from_user.id, message1), build_aiogram_method(tg_object.from_user.id, message2)]
 
     async def _handle_main_menu_show(self, tg_object: Message | CallbackQuery) -> list[TelegramMethod]:
-        message = TextMessage(
+        message1 = PhotoMessage(
+            photo=FSInputFile("static/start.jpg"),
+            reply_markup=self.keyboard_repository.build_main_keyboard(),
+        )
+        message2 = TextMessage(
             text=build_start_text(tg_object.from_user.id),
             reply_markup=self.keyboard_repository.build_to_add_tracking_keyboard(),
             parse_mode="MarkdownV2"
         )
-        return [build_aiogram_method(None, tg_object=tg_object, message=message)]
+        if isinstance(tg_object, CallbackQuery):
+            return [build_aiogram_method(None, tg_object=tg_object, message=message2)]
+        else:
+            return [build_aiogram_method(tg_object.from_user.id, message1), build_aiogram_method(tg_object.from_user.id, message2)]
 
     async def handle_user_start(self, tg_object: Message | CallbackQuery) -> list[TelegramMethod]:
         if (

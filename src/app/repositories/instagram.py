@@ -44,7 +44,7 @@ class InstagramRepository:
 
     async def get_user_reports(self, username: str) -> list[InstagramUserReportSchema]:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/user", params={"username": username})
+            resp = await session.get("/api/user/" + username + "/report")
             if resp.status != 200:
                 raise ApiException(await resp.text())
             body = await resp.json()

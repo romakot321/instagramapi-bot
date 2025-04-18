@@ -542,7 +542,7 @@ class TrackingService:
             text="Сбор данных пользователя "
             + data.username
             + " запущен. По завершению вам придет отчет. Осталось запросов: "
-            + str(user_subscription.requests_available - 1),
+            + str(user_subscription.requests_available),
             reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
                 data.username, button_text="Назад"
             ),

@@ -1,4 +1,5 @@
 import datetime as dt
+from loguru import logger
 import types
 from typing import Annotated
 
@@ -78,15 +79,15 @@ class TrackingFollowingService:
 
         subscribes_usernames = []
         for diff in following_diff:
-            if diff.created_at < report_date or diff.report_id != data.report_id:
+            if diff.report_id != data.report_id:
                 continue
             subscribes_usernames += diff.subscribes_usernames
         paginated_subscribes = [
             subscribes_usernames[i : i + 25]
-            for i in range(0, len(subscribes_usernames), 3)
+            for i in range(0, len(subscribes_usernames), 25)
         ]
 
-        if not paginated_subscribes or len(paginated_subscribes) < data.page:
+        if not subscribes_usernames or len(paginated_subscribes) < data.page:
             message = TextMessage(text="Подписок нет")
         else:
             message = TextMessage(
@@ -108,7 +109,7 @@ class TrackingFollowingService:
 
         unsubscribes_usernames = []
         for diff in following_diff:
-            if diff.created_at < report_date or diff.report_id != data.report_id:
+            if diff.report_id != data.report_id:
                 continue
             unsubscribes_usernames += diff.unsubscribes_usernames
         paginated_subscribes = [

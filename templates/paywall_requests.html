@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Доступ к полной статистике</title>
+  <script src="https://telegram.org/js/telegram-web-app.js?57"></script>
   <style>
     html, body {
       height: 100%;
@@ -269,7 +270,7 @@
         </svg>
     </div>
     <div class="main-title">
-      Доступ к полной<br> статистике
+      Дополнительные<br> запросы
     </div>
     <div class="subtitle">
       Узнай кто подписался, отписался<br> и многое другое
@@ -297,18 +298,18 @@
     <div class="tariffs">
       {% for tariff in tariffs %}
         <label class="tariff-label">
-            <input name="tariff" type="radio" checked>
+            <input name="tariff" data-tariff="{{ tariff.id }}" type="radio" checked>
             <div class="tariff-content">
             <div class="circle"></div>
-            <div class="tariff-info" data-tariff="{{ tariff.id }}" onclick="selectPrice(this)">
-                +{{ tariff.requests_balance }}<br>
+            <div class="tariff-info" onclick="selectPrice(this)">
+                +{{ tariff.requests_balance }} доп. запросов<br>
                 <span style="font-size:15px">{{ tariff.payment_amount }} ₽</span>
             </div>
             </div>
         </label>
       {% endfor %}
     </div>
-    <button class="btn-continue" onclick="getAccess(event)">Продолжить</button>
+    <button class="btn-continue" onclick="getAccess()">Продолжить</button>
     <div class="policy">
       Нажимая "Получить доступ", вы принимаете оферту, и соглашаетесь со списанием. Отменить можно в любое время
     </div>
@@ -318,29 +319,23 @@
     window.onload = () => { window.Telegram.WebApp.expand(); window.Telegram.WebApp.requestFullscreen(); }
 
     function selectPrice(el) {
-        document.querySelectorAll('.price-row').forEach(item => {
-            item.classList.remove('active');
-            item.querySelector('input[type="radio"]').checked = false;
-        });
-
-        el.classList.add('active');
-        el.querySelector('input[type="radio"]').checked = true;
     }
 
     function getAccess() {
-        let selectedTariffId = document.querySelector('.price-row.active').dataset.tariff;
+        let selectedTariffId = document.querySelector('input[type=radio]:checked').dataset.tariff;
         pay(selectedTariffId, window.Telegram.WebApp.initDataUnsafe.user.id);
     }
 
     function pay(tariffId, userTelegramId) {
         let trackingUsername = '{{ tracking_username }}';
+        console.log({tariff_id: +tariffId, user_telegram_id: +userTelegramId, tracking_username: trackingUsername});
 
-        fetch("/api/subscription", {
+        fetch("/api/subscription/requests", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({tariff_id: +tariffId, user_telegram_id: +userTelegramId, tracking_username: trackingUsername})
         })
-            .then(response => window.Telegram.WebApp.close())
+        .then(response => { if (response.ok) window.Telegram.WebApp.close(); })
             .catch(err => console.error(err));
     }
 </script>

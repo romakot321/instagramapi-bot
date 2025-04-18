@@ -43,6 +43,7 @@ async def tracking_new_subscribes(
     bot: Bot,
     tracking_follower_service: Annotated[TrackingFollowerService, Depends(TrackingFollowerService.init)],
 ):
+    logger.debug(f"Listing tracking new followers {callback_data=}")
     method = await tracking_follower_service.handle_tracking_new_subscribes(callback_query, callback_data)
     await bot(method)
 
@@ -58,5 +59,6 @@ async def tracking_new_unsubscribes(
     bot: Bot,
     tracking_follower_service: Annotated[TrackingFollowerService, Depends(TrackingFollowerService.init)],
 ):
+    logger.debug(f"Listing tracking removed followers {callback_data=}")
     method = await tracking_follower_service.handle_tracking_new_unsubscribes(callback_query, callback_data)
     await bot(method)

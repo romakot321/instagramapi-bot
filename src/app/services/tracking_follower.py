@@ -79,7 +79,7 @@ class TrackingFollowerService:
 
         subscribes_usernames = []
         for diff in followers_diff:
-            if diff.created_at < report_date or diff.report_id != data.report_id:
+            if diff.report_id != data.report_id:
                 continue
             subscribes_usernames += diff.subscribes_usernames
         paginated_subscribes = [
@@ -87,7 +87,7 @@ class TrackingFollowerService:
             for i in range(0, len(subscribes_usernames), 3)
         ]
 
-        if not paginated_subscribes or len(paginated_subscribes) < data.page:
+        if not subscribes_usernames or len(paginated_subscribes) < data.page:
             message = TextMessage(text="Подписавшихся нет")
         else:
             message = TextMessage(
@@ -109,7 +109,7 @@ class TrackingFollowerService:
 
         unsubscribes_usernames = []
         for diff in followers_diff:
-            if diff.created_at < report_date or diff.report_id != data.report_id:
+            if diff.report_id != data.report_id:
                 continue
             unsubscribes_usernames += diff.unsubscribes_usernames
         paginated_subscribes = [
@@ -117,7 +117,7 @@ class TrackingFollowerService:
             for i in range(0, len(unsubscribes_usernames), 3)
         ]
 
-        if not paginated_subscribes or len(paginated_subscribes) < data.page:
+        if not unsubscribes_usernames or len(paginated_subscribes) < data.page:
             message = TextMessage(text="Отписавшихся нет")
         else:
             message = TextMessage(

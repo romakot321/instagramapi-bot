@@ -141,13 +141,13 @@ class KeyboardRepository:
                     action=Action.tracking_report_interval.action,
                     ig_u=username,
                     t_id=tariff.id,
-                ),
+                ).pack() if tariff.id != current_tariff_id else "a",
             )
         builder.button(
             text="Назад",
             callback_data=TrackingActionCallback(
                 action=Action.tracking_show.action, username=username
-            ),
+            ).pack(),
         )
         builder.adjust(1)
         return builder.as_markup()
@@ -159,9 +159,9 @@ class KeyboardRepository:
         if not subscribed:
             builder.row(
                 types.InlineKeyboardButton(
-                    text=Action.tracking_unsubscribe.text,
+                    text=Action.tracking_subscribe.text,
                     callback_data=TrackingActionCallback(
-                        action=Action.tracking_unsubscribe.action, username=username
+                        action=Action.tracking_subscribe.action, username=username
                     ).pack(),
                 )
             )
@@ -177,9 +177,9 @@ class KeyboardRepository:
 
         builder.row(
             types.InlineKeyboardButton(
-                text=Action.tracking_subscribe.text,
+                text=Action.tracking_unsubscribe.text,
                 callback_data=TrackingActionCallback(
-                    action=Action.tracking_subscribe.action, username=username
+                    action=Action.tracking_unsubscribe.action, username=username
                 ).pack(),
             )
         )
@@ -188,6 +188,14 @@ class KeyboardRepository:
                 text=Action.tracking_collect_data.text,
                 callback_data=TrackingActionCallback(
                     action=Action.tracking_collect_data.action, username=username
+                ).pack(),
+            )
+        )
+        builder.row(
+            types.InlineKeyboardButton(
+                text=Action.tracking_stats.text,
+                callback_data=TrackingActionCallback(
+                    action=Action.tracking_stats.action, username=username
                 ).pack(),
             )
         )
@@ -650,11 +658,11 @@ class KeyboardRepository:
         url = "https://" + urlparse(BOT_WEBHOOK_URL).netloc + "/paywall/requests"
         url += "?tracking_username=" + tracking_username
         builder.button(
-            text=Action.subscription_add.text,
+            text="Купить доп. запросы",
             web_app=types.WebAppInfo(url=url),
         )
         builder.button(
-            text=Action.tracking_show.text,
+            text="Назад",
             callback_data=TrackingActionCallback(action=Action.tracking_show.action, username=tracking_username).pack()
         )
         builder.adjust(1)
