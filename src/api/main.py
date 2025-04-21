@@ -45,7 +45,7 @@ def register_cors(application):
     )
 
 
-@repeat_every(seconds=3600 * 2, wait_first=3600, raise_exceptions=True)
+@repeat_every(seconds=3600, wait_first=3600)
 async def send_reports():
     async with UserService() as user_service:
         users = await user_service.list(count=10000000)
@@ -53,14 +53,23 @@ async def send_reports():
         subscriptions = await subscription_service.list(count=10000000)
     now = dt.datetime.now(dt.UTC)
     user_id_to_subscriptions = {user.telegram_id: [s for s in subscriptions if s.user_telegram_id == user.telegram_id] for user in users}
+    count = 0
     for user in users:
-        for subscription in user_id_to_subscriptions.get(user.telegram_id, []):
-            logger.debug(subscription.tracking_username)
-            if subscription.tracking_username is None:
-                continue
-            if now.hour * 3600 % int(subscription.tariff.tracking_report_interval) == 0:
-                await UserService.create_report(user.telegram_id, subscription.tracking_username)
-            # await UserService.create_report(user.telegram_id, subscription.tracking_username)
+        try:
+            for subscription in user_id_to_subscriptions.get(user.telegram_id, []):
+                if subscription.tracking_username is None:
+                    continue
+                if now.hour * 3600 % int(subscription.tariff.tracking_report_interval) == 0:
+                    logger.debug("Creating tariff report for " + subscription.tracking_username)
+                    count += 1
+                    try:
+                        await UserService.create_report(user.telegram_id, subscription.tracking_username)
+                    except ValueError:
+                        continue
+                # await UserService.create_report(user.telegram_id, subscription.tracking_username)
+        except Exception as e:
+            logger.exception(e)
+    logger.info(f"Created {count} reports")
 
 
 @asynccontextmanager

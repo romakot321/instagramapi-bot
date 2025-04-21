@@ -492,6 +492,12 @@ class TrackingService:
         media_stats = await self.instagram_repository.get_media_user_stats(
             tracking.instagram_username
         )
+        if isinstance(user_info, str):
+            user_info = None
+        if isinstance(user_stats, str):
+            user_stats = None
+        if isinstance(media_stats, str):
+            media_stats = None
         message = TextMessage(
             text=build_tracking_report_text(user_stats, media_stats, user_info),
             reply_markup=self.keyboard_repository.build_tracking_report_keyboard(

@@ -232,20 +232,20 @@ def build_tracking_followers_text(followers: list[str]) -> str:
 
 
 def build_tracking_report_text(
-    change: InstagramUserStatsSchema,
-    current: InstagramMediaUserStatsSchema,
-    tracking: InstagramUserSchema,
+    change: InstagramUserStatsSchema | None,
+    current: InstagramMediaUserStatsSchema | None,
+    tracking: InstagramUserSchema | None,
 ) -> str:
     followers_count_difference = "(0)"
-    if change.followers_count_difference > 0:
+    if change and change.followers_count_difference > 0:
         followers_count_difference = f"🔼 (+{change.followers_count_difference})"
-    elif change.followers_count_difference < 0:
+    elif change and change.followers_count_difference < 0:
         followers_count_difference = f"🔽 ({change.followers_count_difference})"
 
     following_count_difference = "(0)"
-    if change.following_count_difference > 0:
+    if change and change.following_count_difference > 0:
         following_count_difference = f"🔼 (+{change.following_count_difference})"
-    elif change.following_count_difference < 0:
+    elif change and change.following_count_difference < 0:
         following_count_difference = f"🔽 ({change.following_count_difference})"
 
     media_count_difference = "(0)"
