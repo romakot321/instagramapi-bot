@@ -13,7 +13,7 @@ class InstagramUserSchema(BaseModel):
     following_count: int | None = None
 
     def is_big(self) -> bool:
-        return (self.followers_count or 0) > 20000 or (self.following_count or 0) > 3000
+        return (self.followers_count or 0) >= 20000 or (self.following_count or 0) >= 3000
 
 
 class InstagramUserStatsSchema(BaseModel):

@@ -33,6 +33,7 @@ from app.schemas.texts import (
     build_tracking_stats_text,
     build_tracking_subscribe_text,
     build_tracking_unsubscribe_text,
+    tracking_big_subscribe_text
 )
 from app.services.utils import build_aiogram_method
 
@@ -144,14 +145,14 @@ class TrackingService:
 
         if subscription_id is None:
             message = TextMessage(
-                text="Вы достигли максимального количества отслеживаний",
+                text="Вы достигли максимального количества отслеживаний,"
                 reply_markup=self.keyboard_repository.build_to_trackings_max_buy_keyboard(
                     data.username
                 ),
             )
         elif (await self.instagram_repository.get_user_info(data.username)).is_big():
             message = TextMessage(
-                text="На этот аккаунт подписаться нельзя",
+                text=tracking_big_subscribe_text,
                 reply_markup=self.keyboard_repository.build_to_add_tracking_keyboard(),
             )
         else:
@@ -385,7 +386,7 @@ class TrackingService:
         info = await self.instagram_repository.get_user_following_followers_collision(
             data.username
         )
-        usernames = info.follow_usernames[(data.page - 1) * 10 : data.page * 10]
+        usernames = info.follow_usernames[(data.page - 1) * 15 : data.page * 15]
         message = TextMessage(
             text=build_tracking_followers_text(usernames),
             reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
@@ -393,6 +394,7 @@ class TrackingService:
                 data.username,
                 len(info.follow_usernames),
                 data.page,
+                on_page_count=15
             ),
             parse_mode="MarkdownV2",
         )
@@ -404,7 +406,7 @@ class TrackingService:
         info = await self.instagram_repository.get_user_followers_following_difference(
             data.username
         )
-        usernames = info.follow_usernames[(data.page - 1) * 10 : data.page * 10]
+        usernames = info.follow_usernames[(data.page - 1) * 15 : data.page * 15]
         message = TextMessage(
             text=build_tracking_followers_text(usernames),
             reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
@@ -412,6 +414,7 @@ class TrackingService:
                 data.username,
                 len(info.follow_usernames),
                 data.page,
+                on_page_count=15
             ),
             parse_mode="MarkdownV2",
         )
@@ -423,7 +426,7 @@ class TrackingService:
         info = await self.instagram_repository.get_user_following_followers_difference(
             data.username
         )
-        usernames = info.follow_usernames[(data.page - 1) * 10 : data.page * 10]
+        usernames = info.follow_usernames[(data.page - 1) * 15 : data.page * 15]
         message = TextMessage(
             text=build_tracking_followers_text(usernames),
             reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
@@ -431,6 +434,7 @@ class TrackingService:
                 data.username,
                 len(info.follow_usernames),
                 data.page,
+                on_page_count=15
             ),
             parse_mode="MarkdownV2",
         )
@@ -440,7 +444,7 @@ class TrackingService:
         self, query: CallbackQuery, data: TrackingActionCallback
     ) -> TelegramMethod:
         info = await self.instagram_repository.get_user_hidden_followers(data.username)
-        usernames = info.follow_usernames[(data.page - 1) * 10 : data.page * 10]
+        usernames = info.follow_usernames[(data.page - 1) * 15 : data.page * 15]
         message = TextMessage(
             text=build_tracking_followers_text(usernames),
             reply_markup=self.keyboard_repository.build_paginated_with_to_tracking_show(
@@ -448,6 +452,7 @@ class TrackingService:
                 data.username,
                 len(info.follow_usernames),
                 data.page,
+                on_page_count=15
             ),
             parse_mode="MarkdownV2",
         )
