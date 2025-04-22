@@ -44,11 +44,16 @@ class UserService:
             keyboard_repository=keyboard_repository,
         )
 
+    def _get_referral_id(self, tg_object: Message | CallbackQuery) -> str | None:
+        if isinstance(tg_object, Message) and tg_object.text:
+            return " ".join(tg_object.text.split(" ")[1:])
+
     async def _handle_new_user(self, tg_object: Message | CallbackQuery) -> list[TelegramMethod]:
         await self.user_repository.create(
             telegram_id=tg_object.from_user.id,
             telegram_name=tg_object.from_user.full_name,
-            telegram_username=tg_object.from_user.username
+            telegram_username=tg_object.from_user.username,
+            referral_id=self._get_referral_id(tg_object)
         )
         message1 = PhotoMessage(
             photo=FSInputFile("static/start.jpg"),
