@@ -145,7 +145,7 @@ class TrackingService:
 
         if subscription_id is None:
             message = TextMessage(
-                text="Вы достигли максимального количества отслеживаний,"
+                text="Вы достигли максимального количества отслеживаний",
                 reply_markup=self.keyboard_repository.build_to_trackings_max_buy_keyboard(
                     data.username
                 ),
