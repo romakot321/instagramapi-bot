@@ -145,7 +145,7 @@ class TrackingService:
 
         if subscription_id is None:
             message = TextMessage(
-                text="Вы достигли максимального количества отслеживаний,"
+                text="Вы достигли максимального количества отслеживаний",
                 reply_markup=self.keyboard_repository.build_to_trackings_max_buy_keyboard(
                     data.username
                 ),
@@ -476,7 +476,7 @@ class TrackingService:
             message = TextMessage(
                 text=build_tracking_report_text(user_stats, media_stats, user_info),
                 reply_markup=self.keyboard_repository.build_tracking_report_keyboard(
-                    tracking.instagram_username
+                    tracking.instagram_username, report_id=-1
                 ),
                 parse_mode="MarkdownV2",
             )
@@ -543,7 +543,7 @@ class TrackingService:
             return build_aiogram_method(None, tg_object=tg_object, message=message)
 
         await self.instagram_repository.create_user_report(
-            tg_object.from_user.id, data.username
+            tg_object.from_user.id, data.username, force=True
         )
         await self.subscription_repository.update(
             user_subscription.id,
