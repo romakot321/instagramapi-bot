@@ -211,3 +211,16 @@ class FlowVariant(BaseMixin, Base):
             .filter(FlowUserAssociation.user.has(User.subscriptions.any(Subscription.user_id == User.id)))
             .label("subscribed_users_count")
         )
+
+
+class Account(BaseMixin, Base):
+    __tablename__ = "accounts"
+
+    username: M[str]
+    password_hash: M[str]
+
+    access_to_statistics: M[bool] = column(server_default=false())
+    access_to_users: M[bool] = column(server_default=false())
+    access_to_trackings: M[bool] = column(server_default=false())
+    access_to_partners: M[bool] = column(server_default=false())
+    access_to_experiments: M[bool] = column(server_default=false())
