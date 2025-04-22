@@ -118,10 +118,12 @@ class Partner(BaseMixin, Base):
     __tablename__ = "partners"
 
     name: M[str] = column(unique=True)
+    creator_id: M[int | None] = column(ForeignKey("accounts.id", ondelete="SET NULL"))
 
     referrals: M[list["Referral"]] = relationship(
         back_populates="partner", lazy="selectin", cascade="delete"
     )
+    creator: M["Account"] = relationship(back_populates="referrals", lazy="noload")
 
 
 class Referral(BaseMixin, Base):
