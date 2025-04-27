@@ -35,8 +35,8 @@ class User(BaseMixin, Base):
     telegram_name: M[str | None]
     referral_id: M[str | None] = column(ForeignKey("referrals.id", ondelete="SET NULL"))
 
-    trackings: M[list['Tracking']] = relationship(back_populates="creator", lazy="selectin")
-    subscriptions: M[list['Subscription']] = relationship(back_populates="user", lazy="noload", cascade="delete")
+    trackings: M[list['Tracking']] = relationship(back_populates="creator", lazy="noload")
+    subscriptions: M[list['Subscription']] = relationship(back_populates="user", lazy="selectin", cascade="delete")
     referral: M["Referral"] = relationship(back_populates="users", lazy="selectin")
     flow_variants: M[list["FlowVariant"]] = relationship(secondary="flowvariant_user_association", lazy="selectin", back_populates="users", cascade="delete")
 
@@ -45,6 +45,20 @@ class User(BaseMixin, Base):
         if not self.subscriptions:
             return
         return any([s.renewal_enabled for s in self.subscriptions])
+
+    @hybrid_property
+    def trackings_count(self) -> int:
+        return len(self.trackings)
+
+    @trackings_count.expression
+    def trackings_count(cls):
+        return (
+            select(func.count(Tracking.creator_telegram_id))
+            .select_from(Tracking)
+            .where(Tracking.creator_telegram_id == cls.telegram_id)
+            .label("trackings_count")
+        )
+
 
 
 class Tracking(BaseMixin, Base):
@@ -123,7 +137,7 @@ class Partner(BaseMixin, Base):
     referrals: M[list["Referral"]] = relationship(
         back_populates="partner", lazy="selectin", cascade="delete"
     )
-    creator: M["Account"] = relationship(back_populates="referrals", lazy="noload")
+    creator: M["Account"] = relationship(back_populates="partners", lazy="noload")
 
 
 class Referral(BaseMixin, Base):
@@ -226,3 +240,5 @@ class Account(BaseMixin, Base):
     access_to_trackings: M[bool] = column(server_default=false())
     access_to_partners: M[bool] = column(server_default=false())
     access_to_experiments: M[bool] = column(server_default=false())
+
+    partners: M[list['Partner']] = relationship(back_populates="creator", lazy="noload")

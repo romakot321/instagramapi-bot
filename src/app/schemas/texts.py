@@ -269,7 +269,7 @@ def build_tracking_report_text(
             / tracking.followers_count
             * 100,
             2,
-        ),
+        ) if tracking.followers_count > 0 else 0,
         change=change,
         tracking=tracking,
         followers_count_difference=followers_count_difference,

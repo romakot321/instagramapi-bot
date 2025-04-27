@@ -67,7 +67,7 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text("(now() at time zone 'utc')"), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['partner_id'], ['partners.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['partner_id'], ['partners.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_referrals_id'), 'referrals', ['id'], unique=False)
