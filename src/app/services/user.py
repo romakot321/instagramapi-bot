@@ -46,7 +46,10 @@ class UserService:
 
     def _get_referral_id(self, tg_object: Message | CallbackQuery) -> str | None:
         if isinstance(tg_object, Message) and tg_object.text:
-            return " ".join(tg_object.text.split(" ")[1:])
+            referral_id = " ".join(tg_object.text.split(" ")[1:])
+            if referral_id:
+                return referral_id
+        return None
 
     async def _handle_new_user(self, tg_object: Message | CallbackQuery) -> list[TelegramMethod]:
         await self.user_repository.create(

@@ -57,7 +57,7 @@ class TrackingFollowerService:
 
     async def _fetch_followers_paginated(
         self, username: str, report_id: int, paginate_key: str, on_page_count: int = 25
-    ) -> list[list[str]]:
+    ) -> tuple[list[list[str]], int]:
         followers_diff = await self.instagram_repository.get_user_followers_difference(
             username
         )
@@ -71,7 +71,7 @@ class TrackingFollowerService:
             usernames[i : i + on_page_count]
             for i in range(0, len(usernames), on_page_count)
         ]
-        return paginated_usernames
+        return paginated_usernames, len(usernames)
 
     async def handle_tracking_followers(
         self, query: CallbackQuery, data: TrackingActionCallback
@@ -90,7 +90,7 @@ class TrackingFollowerService:
     async def handle_tracking_new_subscribes(
         self, query: CallbackQuery, data: TrackingReportCallback
     ) -> TelegramMethod:
-        paginated_subscribes = await self._fetch_followers_paginated(
+        paginated_subscribes, total_count = await self._fetch_followers_paginated(
             data.username, data.report_id, "subscribes_usernames"
         )
 
@@ -101,7 +101,7 @@ class TrackingFollowerService:
                 text=build_tracking_followers_text(paginated_subscribes[data.page - 1]),
                 reply_markup=self.keyboard_repository.build_tracking_new_subscribes_keyboard(
                     data.username,
-                    len(subscribes_usernames),
+                    total_count,
                     data.page,
                     on_page_count=25,
                 ),
@@ -116,7 +116,7 @@ class TrackingFollowerService:
         )
 
     async def _handle_load_new_unsubscribes(self, query: CallbackQuery, data: TrackingActionCallback) -> AsyncGenerator[TelegramMethod]:
-        paginated_subscribes = await self._fetch_followers_paginated(
+        paginated_subscribes, total_count = await self._fetch_followers_paginated(
             data.username, data.report_id, "unsubscribes_usernames"
         )
 
@@ -127,7 +127,7 @@ class TrackingFollowerService:
                 text=build_tracking_followers_text(paginated_subscribes[data.page - 1]),
                 reply_markup=self.keyboard_repository.build_tracking_new_unsubscribes_keyboard(
                     data.username,
-                    len(unsubscribes_usernames),
+                    total_count,
                     data.page,
                     on_page_count=25,
                 ),
@@ -145,9 +145,10 @@ class TrackingFollowerService:
         self, query: CallbackQuery, data: TrackingActionCallback
     ) -> AsyncGenerator[TelegramMethod]:
         if "отчет" in query.message.text.lower():  # If it's not page change
-            return await self._handle_load_new_unsubscribes(query, data)
+            yield await self._handle_load_new_unsubscribes(query, data)
+            return
 
-        paginated_subscribes = await self._fetch_followers_paginated(
+        paginated_subscribes, total_count = await self._fetch_followers_paginated(
             data.username, data.report_id, "unsubscribes_usernames"
         )
 
@@ -158,7 +159,7 @@ class TrackingFollowerService:
                 text=build_tracking_followers_text(paginated_subscribes[data.page - 1]),
                 reply_markup=self.keyboard_repository.build_tracking_new_unsubscribes_keyboard(
                     data.username,
-                    len(unsubscribes_usernames),
+                    total_count,
                     data.page,
                     on_page_count=25,
                 ),

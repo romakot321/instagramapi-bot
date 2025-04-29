@@ -60,5 +60,5 @@ async def tracking_new_unsubscribes(
     tracking_follower_service: Annotated[TrackingFollowerService, Depends(TrackingFollowerService.init)],
 ):
     logger.debug(f"Listing tracking removed followers {callback_data=}")
-    method = await tracking_follower_service.handle_tracking_new_unsubscribes(callback_query, callback_data)
-    await bot(method)
+    async for method in tracking_follower_service.handle_tracking_new_unsubscribes(callback_query, callback_data):
+        await bot(method)
