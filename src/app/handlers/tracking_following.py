@@ -37,15 +37,21 @@ router = Router(name=__name__)
         F.action == Action.tracking_subscribtions.action
     )
 )
-async def tracking_subscribtions(
+async def tracking_new_subscribes(
     callback_query: CallbackQuery,
     callback_data: TrackingReportCallback,
     bot: Bot,
     tracking_following_service: Annotated[TrackingFollowingService, Depends(TrackingFollowingService.init)],
 ):
-    logger.debug(f"Listing tracking new following {callback_data=}")
-    method = await tracking_following_service.handle_tracking_new_subscribes(callback_query, callback_data)
-    await bot(method)
+    logger.debug(f"Listing tracking new followings {callback_data=}")
+    previous_message: Message | None = None
+    async for method in tracking_following_service.handle_tracking_new_unsubscribes(callback_query, callback_data):
+        msg = await bot(method)
+        if previous_message is not None:
+            await bot.delete_message(
+                previous_message.chat.id, previous_message.message_id
+            )
+        previous_message = msg
 
 
 @router.callback_query(
@@ -53,12 +59,18 @@ async def tracking_subscribtions(
         F.action == Action.tracking_unsubscribes.action
     )
 )
-async def tracking_unsubscribes(
+async def tracking_new_unsubscribes(
     callback_query: CallbackQuery,
     callback_data: TrackingReportCallback,
     bot: Bot,
     tracking_following_service: Annotated[TrackingFollowingService, Depends(TrackingFollowingService.init)],
 ):
-    logger.debug(f"Listing tracking removed following {callback_data=}")
-    method = await tracking_following_service.handle_tracking_new_unsubscribes(callback_query, callback_data)
-    await bot(method)
+    logger.debug(f"Listing tracking removed followings {callback_data=}")
+    previous_message: Message | None = None
+    async for method in tracking_following_service.handle_tracking_new_unsubscribes(callback_query, callback_data):
+        msg = await bot(method)
+        if previous_message is not None:
+            await bot.delete_message(
+                previous_message.chat.id, previous_message.message_id
+            )
+        previous_message = msg

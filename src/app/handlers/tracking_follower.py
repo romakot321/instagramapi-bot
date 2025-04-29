@@ -44,8 +44,14 @@ async def tracking_new_subscribes(
     tracking_follower_service: Annotated[TrackingFollowerService, Depends(TrackingFollowerService.init)],
 ):
     logger.debug(f"Listing tracking new followers {callback_data=}")
-    method = await tracking_follower_service.handle_tracking_new_subscribes(callback_query, callback_data)
-    await bot(method)
+    previous_message: Message | None = None
+    async for method in tracking_follower_service.handle_tracking_new_unsubscribes(callback_query, callback_data):
+        msg = await bot(method)
+        if previous_message is not None:
+            await bot.delete_message(
+                previous_message.chat.id, previous_message.message_id
+            )
+        previous_message = msg
 
 
 @router.callback_query(
@@ -60,5 +66,11 @@ async def tracking_new_unsubscribes(
     tracking_follower_service: Annotated[TrackingFollowerService, Depends(TrackingFollowerService.init)],
 ):
     logger.debug(f"Listing tracking removed followers {callback_data=}")
+    previous_message: Message | None = None
     async for method in tracking_follower_service.handle_tracking_new_unsubscribes(callback_query, callback_data):
-        await bot(method)
+        msg = await bot(method)
+        if previous_message is not None:
+            await bot.delete_message(
+                previous_message.chat.id, previous_message.message_id
+            )
+        previous_message = msg

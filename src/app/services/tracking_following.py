@@ -21,7 +21,7 @@ from app.schemas.texts import (
 from app.services.utils import build_aiogram_method
 
 
-class TrackingFollowingService:
+class Trackingfollowingervice:
     def __init__(
         self,
         tracking_repository: TrackingRepository,
@@ -69,62 +69,156 @@ class TrackingFollowingService:
         )
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
-    async def handle_tracking_new_subscribes(
-        self, query: CallbackQuery, data: TrackingReportCallback
-    ) -> TelegramMethod:
+    async def _fetch_following_paginated(
+        self, username: str, report_id: int, paginate_key: str, on_page_count: int = 25
+    ) -> tuple[list[list[str]], int]:
         following_diff = await self.instagram_repository.get_user_following_difference(
-            data.username
+            username
         )
-        report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
-        subscribes_usernames = []
+        usernames = []
         for diff in following_diff:
-            if diff.report_id != data.report_id:
+            if diff.report_id != report_id:
                 continue
-            subscribes_usernames += diff.subscribes_usernames
-        paginated_subscribes = [
-            subscribes_usernames[i : i + 25]
-            for i in range(0, len(subscribes_usernames), 25)
+            usernames += getattr(diff, paginate_key)
+        paginated_usernames = [
+            usernames[i : i + on_page_count]
+            for i in range(0, len(usernames), on_page_count)
         ]
+        return paginated_usernames, len(usernames)
 
-        if not subscribes_usernames or len(paginated_subscribes) < data.page:
-            message = TextMessage(text="Подписок нет")
+    async def handle_tracking_following(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> TelegramMethod:
+        await query.answer("Функция в разработке")
+        info = await self.instagram_repository.get_user_following(data.username)
+        message = TextMessage(
+            text=build_tracking_following_text(info),
+            reply_markup=self.keyboard_repository.build_to_tracking_show_keyboard(
+                data.username
+            ),
+            message_id=query.message.message_id,
+        )
+        return build_aiogram_method(query.from_user.id, message, use_edit=True)
+
+    async def _handle_load_new_subscribes(self, query: CallbackQuery, data: TrackingActionCallback) -> AsyncGenerator[TelegramMethod]:
+        yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаю..."))
+
+        paginated_subscribes, total_count = await self._fetch_following_paginated(
+            data.username, data.report_id, "subscribes_usernames"
+        )
+
+        if not paginated_subscribes or len(paginated_subscribes) < data.page:
+            message = TextMessage(text="Отписавшихся нет")
         else:
             message = TextMessage(
                 text=build_tracking_following_text(paginated_subscribes[data.page - 1]),
                 reply_markup=self.keyboard_repository.build_tracking_subscribtions_keyboard(
-                    data.username, len(subscribes_usernames), data.page, on_page_count=25
+                    data.username,
+                    total_count,
+                    data.page,
+                    on_page_count=25,
                 ),
-                parse_mode="MarkdownV2"
+                parse_mode="MarkdownV2",
             )
-        return build_aiogram_method(None, tg_object=query, message=message, use_edit="отчет" not in query.message.text.lower())
 
-    async def handle_tracking_new_unsubscribes(
-        self, query: CallbackQuery, data: TrackingReportCallback
-    ) -> TelegramMethod:
-        following_diff = await self.instagram_repository.get_user_following_difference(
-            data.username
+        yield build_aiogram_method(
+            None,
+            tg_object=query,
+            message=message,
+            use_edit="статистика" not in query.message.text.lower(),
         )
-        report_date = dt.datetime.now().replace(hour=0, minute=0, second=0)
 
-        unsubscribes_usernames = []
-        for diff in following_diff:
-            if diff.report_id != data.report_id:
-                continue
-            unsubscribes_usernames += diff.unsubscribes_usernames
-        paginated_subscribes = [
-            unsubscribes_usernames[i : i + 25]
-            for i in range(0, len(unsubscribes_usernames), 3)
-        ]
+    async def _handle_show_new_subscribes(self, query, data):
+        paginated_subscribes, total_count = await self._fetch_following_paginated(
+            data.username, data.report_id, "subscribes_usernames"
+        )
 
         if not paginated_subscribes or len(paginated_subscribes) < data.page:
-            message = TextMessage(text="Отписок нет")
+            message = TextMessage(text="Подписавшихся нет")
+        else:
+            message = TextMessage(
+                text=build_tracking_following_text(paginated_subscribes[data.page - 1]),
+                reply_markup=self.keyboard_repository.build_tracking_subscribtions_keyboard(
+                    data.username,
+                    total_count,
+                    data.page,
+                    on_page_count=25,
+                ),
+                parse_mode="MarkdownV2",
+            )
+
+        yield build_aiogram_method(
+            None,
+            tg_object=query,
+            message=message,
+            use_edit="статистика" not in query.message.text.lower(),
+        )
+
+    async def handle_tracking_new_subscribes(
+        self, query: CallbackQuery, data: TrackingReportCallback
+    ) -> TelegramMethod:
+        if "статистика" in query.message.text.lower():  # If it's not page change
+            return await self._handle_load_new_subscribes(query, data)
+        return await self._handle_show_new_subscribes(query, data)
+
+    async def _handle_load_new_unsubscribes(self, query: CallbackQuery, data: TrackingActionCallback) -> AsyncGenerator[TelegramMethod]:
+        yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаю..."))
+
+        paginated_subscribes, total_count = await self._fetch_following_paginated(
+            data.username, data.report_id, "unsubscribes_usernames"
+        )
+
+        if not paginated_subscribes or len(paginated_subscribes) < data.page:
+            message = TextMessage(text="Отписавшихся нет")
         else:
             message = TextMessage(
                 text=build_tracking_following_text(paginated_subscribes[data.page - 1]),
                 reply_markup=self.keyboard_repository.build_tracking_unsubscribes_keyboard(
-                    data.username, len(unsubscribes_usernames), data.page, on_page_count=25
+                    data.username,
+                    total_count,
+                    data.page,
+                    on_page_count=25,
                 ),
-                parse_mode="MarkdownV2"
+                parse_mode="MarkdownV2",
             )
-        return build_aiogram_method(None, tg_object=query, message=message, use_edit="отчет" not in query.message.text.lower())
+
+        yield build_aiogram_method(
+            None,
+            tg_object=query,
+            message=message,
+            use_edit="статистика" not in query.message.text.lower(),
+        )
+
+    async def _handle_show_new_unsubscribes(self, query, data):
+        paginated_subscribes, total_count = await self._fetch_following_paginated(
+            data.username, data.report_id, "unsubscribes_usernames"
+        )
+
+        if not paginated_subscribes or len(paginated_subscribes) < data.page:
+            message = TextMessage(text="Отписавшихся нет")
+        else:
+            message = TextMessage(
+                text=build_tracking_following_text(paginated_subscribes[data.page - 1]),
+                reply_markup=self.keyboard_repository.build_tracking_unsubscribes_keyboard(
+                    data.username,
+                    total_count,
+                    data.page,
+                    on_page_count=25,
+                ),
+                parse_mode="MarkdownV2",
+            )
+
+        yield build_aiogram_method(
+            None,
+            tg_object=query,
+            message=message,
+            use_edit="статистика" not in query.message.text.lower(),
+        )
+
+    async def handle_tracking_new_unsubscribes(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> AsyncGenerator[TelegramMethod]:
+        if "статистика" in query.message.text.lower():  # If it's not page change
+            return await self._handle_load_new_unsubscribes(query, data)
+        return await self._handle_show_new_unsubscribes(query, data)
