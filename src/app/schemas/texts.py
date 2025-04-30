@@ -336,7 +336,7 @@ _subscription_paywall_text = """
 
 **Повысь эффективность своего Instagram — открой для себя возможность Premium уже сейчас!**
 
-Нажимая на кнопку "Приобрести подписку", вы соглашаетесь с условиями [[пользовательского соглашения]]((https://my-followers.online/static/privacy.html)) и [[политики конфиденциальности]]((https://my-followers.online/static/terms.html))
+Переходя к оплате, вы согласны с тарифами, принимаете [[политики конфиденциальности]]((https://my-followers.online/static/terms.html)) и [[пользовательского соглашения]]((https://my-followers.online/static/privacy.html)), а также даете согласие на дальнейшую пролонгацию и автоматическую оплату каждые 30 дней.
 """
 subscription_paywall_text = escape_markdown(_subscription_paywall_text)
 
