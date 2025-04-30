@@ -88,14 +88,14 @@ class TrackingFollowerService:
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
     async def _handle_load_new_subscribes(self, query: CallbackQuery, data: TrackingActionCallback) -> AsyncGenerator[TelegramMethod]:
-        yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаю..."))
+        yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаю..."), use_edit=False)
 
         paginated_subscribes, total_count = await self._fetch_followers_paginated(
             data.username, data.report_id, "subscribes_usernames"
         )
 
         if not paginated_subscribes or len(paginated_subscribes) < data.page:
-            message = TextMessage(text="Отписавшихся нет")
+            message = TextMessage(text="Подписавшихся нет")
         else:
             message = TextMessage(
                 text=build_tracking_followers_text(paginated_subscribes[data.page - 1]),
@@ -141,15 +141,15 @@ class TrackingFollowerService:
             use_edit="статистика" not in query.message.text.lower(),
         )
 
-    async def handle_tracking_new_subscribes(
+    def handle_tracking_new_subscribes(
         self, query: CallbackQuery, data: TrackingReportCallback
     ) -> TelegramMethod:
         if "статистика" in query.message.text.lower():  # If it's not page change
-            return await self._handle_load_new_subscribes(query, data)
-        return await self._handle_show_new_subscribes(query, data)
+            return self._handle_load_new_subscribes(query, data)
+        return self._handle_show_new_subscribes(query, data)
 
     async def _handle_load_new_unsubscribes(self, query: CallbackQuery, data: TrackingActionCallback) -> AsyncGenerator[TelegramMethod]:
-        yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаю..."))
+        yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаю..."), use_edit=False)
 
         paginated_subscribes, total_count = await self._fetch_followers_paginated(
             data.username, data.report_id, "unsubscribes_usernames"
@@ -202,9 +202,9 @@ class TrackingFollowerService:
             use_edit="статистика" not in query.message.text.lower(),
         )
 
-    async def handle_tracking_new_unsubscribes(
+    def handle_tracking_new_unsubscribes(
         self, query: CallbackQuery, data: TrackingActionCallback
     ) -> AsyncGenerator[TelegramMethod]:
         if "статистика" in query.message.text.lower():  # If it's not page change
-            return await self._handle_load_new_unsubscribes(query, data)
-        return await self._handle_show_new_unsubscribes(query, data)
+            return self._handle_load_new_unsubscribes(query, data)
+        return self._handle_show_new_unsubscribes(query, data)
