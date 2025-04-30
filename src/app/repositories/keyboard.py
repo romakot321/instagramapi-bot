@@ -234,15 +234,15 @@ class KeyboardRepository:
                 ).pack(),
             ),
         )
-        builder.row(
-            types.InlineKeyboardButton(
-                text=Action.tracking_hidden_followers.text,
-                callback_data=TrackingActionCallback(
-                    action=Action.tracking_hidden_followers.action,
-                    username=username,
-                ).pack(),
-            )
-        )
+#        builder.row(
+#            types.InlineKeyboardButton(
+#                text=Action.tracking_hidden_followers.text,
+#                callback_data=TrackingActionCallback(
+#                    action=Action.tracking_hidden_followers.action,
+#                    username=username,
+#                ).pack(),
+#            )
+#        )
         builder.row(
             types.InlineKeyboardButton(
                 text=Action.tracking_settings.text,

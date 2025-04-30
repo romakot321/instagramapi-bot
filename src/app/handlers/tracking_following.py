@@ -45,7 +45,7 @@ async def tracking_new_subscribes(
 ):
     logger.debug(f"Listing tracking new followings {callback_data=}")
     previous_message: Message | None = None
-    async for method in tracking_following_service.handle_tracking_new_unsubscribes(callback_query, callback_data):
+    async for method in tracking_following_service.handle_tracking_new_subscribes(callback_query, callback_data):
         msg = await bot(method)
         if previous_message is not None:
             await bot.delete_message(

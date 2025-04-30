@@ -51,7 +51,7 @@ _start_text = """
 
 
 _support_text = """
-По всем вопросам обращайтесь в службу поддержки 👉 [support_contact]
+По всем вопросам обращайтесь в службу поддержки 👉 @instfollowers_support
 """
 support_text = escape_markdown(_support_text)
 
@@ -131,7 +131,7 @@ _tracking_subscribe_text = """
 
 tracking_big_subscribe_text = """
 К сожалению, на дынный момент мы не можем отслеживать аккаунты с более 20 тысяч подписчиков, но с дальнейшими обновлениями такой функционал появится!
-Если же вам необходим спец. пакет отслеживания, обратитесь в поддержку: [support_contact]
+Если же вам необходим спец. пакет отслеживания, обратитесь в поддержку: @instfollowers_support
 """
 
 
@@ -200,7 +200,7 @@ def build_tracking_stats_text(
         media_count_difference = f"🔽 ({change.media_count_difference})"
 
     text = _tracking_stats_text.format(
-        media_count=weekly.count,
+        media_count=tracking.media_count or weekly.count,
         media_likes=round(weekly.like_count_sum / weekly.count, 2) if weekly.count else 0,
         media_comments=round(weekly.comment_count_sum / weekly.count, 2) if weekly.count else 0,
         weekly_media_coeff=round(
