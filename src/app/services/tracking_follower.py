@@ -56,16 +56,14 @@ class TrackingFollowerService:
         )
 
     async def _fetch_followers_paginated(
-        self, username: str, report_id: int, paginate_key: str, on_page_count: int = 25
+        self, report_id: int, paginate_key: str, on_page_count: int = 25
     ) -> tuple[list[list[str]], int]:
-        followers_diff = await self.instagram_repository.get_user_followers_difference(
-            username
+        followers_diff = (
+            await self.instagram_repository.get_report_followers_difference(report_id)
         )
 
         usernames = []
         for diff in followers_diff:
-            if diff.report_id != report_id:
-                continue
             usernames += getattr(diff, paginate_key)
         paginated_usernames = [
             usernames[i : i + on_page_count]
@@ -87,11 +85,18 @@ class TrackingFollowerService:
         )
         return build_aiogram_method(query.from_user.id, message, use_edit=True)
 
-    async def _handle_load_new_subscribes(self, query: CallbackQuery, data: TrackingActionCallback) -> AsyncGenerator[TelegramMethod]:
-        yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаю..."), use_edit=False)
+    async def _handle_load_new_subscribes(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> AsyncGenerator[TelegramMethod]:
+        yield build_aiogram_method(
+            None,
+            tg_object=query,
+            message=TextMessage(text="Загружаю..."),
+            use_edit=False,
+        )
 
         paginated_subscribes, total_count = await self._fetch_followers_paginated(
-            data.username, data.report_id, "subscribes_usernames"
+            data.report_id, "subscribes_usernames"
         )
 
         if not paginated_subscribes or len(paginated_subscribes) < data.page:
@@ -117,7 +122,7 @@ class TrackingFollowerService:
 
     async def _handle_show_new_subscribes(self, query, data):
         paginated_subscribes, total_count = await self._fetch_followers_paginated(
-            data.username, data.report_id, "subscribes_usernames"
+            data.report_id, "subscribes_usernames"
         )
 
         if not paginated_subscribes or len(paginated_subscribes) < data.page:
@@ -148,11 +153,18 @@ class TrackingFollowerService:
             return self._handle_load_new_subscribes(query, data)
         return self._handle_show_new_subscribes(query, data)
 
-    async def _handle_load_new_unsubscribes(self, query: CallbackQuery, data: TrackingActionCallback) -> AsyncGenerator[TelegramMethod]:
-        yield build_aiogram_method(None, tg_object=query, message=TextMessage(text="Загружаю..."), use_edit=False)
+    async def _handle_load_new_unsubscribes(
+        self, query: CallbackQuery, data: TrackingActionCallback
+    ) -> AsyncGenerator[TelegramMethod]:
+        yield build_aiogram_method(
+            None,
+            tg_object=query,
+            message=TextMessage(text="Загружаю..."),
+            use_edit=False,
+        )
 
         paginated_subscribes, total_count = await self._fetch_followers_paginated(
-            data.username, data.report_id, "unsubscribes_usernames"
+            data.report_id, "unsubscribes_usernames"
         )
 
         if not paginated_subscribes or len(paginated_subscribes) < data.page:
@@ -178,7 +190,7 @@ class TrackingFollowerService:
 
     async def _handle_show_new_unsubscribes(self, query, data):
         paginated_subscribes, total_count = await self._fetch_followers_paginated(
-            data.username, data.report_id, "unsubscribes_usernames"
+            data.report_id, "unsubscribes_usernames"
         )
 
         if not paginated_subscribes or len(paginated_subscribes) < data.page:

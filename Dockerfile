@@ -79,8 +79,8 @@ COPY --chown=$user_id:$group_id proxychains.conf /app/
 COPY docker-entrypoint.sh /
 
 COPY --link --chown=$user_id:$group_id --from=build /app/ /app
-COPY --link ./templates /app/templates
-COPY --link ./static /app/static
+COPY --link --chown=$user_id:$group_id ./templates /app/templates
+COPY --link --chown=$user_id:$group_id ./static /app/static
 
 USER $user_id:$group_id
 WORKDIR /app

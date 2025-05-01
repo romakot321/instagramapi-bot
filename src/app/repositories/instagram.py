@@ -42,9 +42,9 @@ class InstagramRepository:
                 return None
             raise ApiException(await resp.text())
 
-    async def get_user_reports(self, username: str) -> list[InstagramUserReportSchema]:
+    async def get_user_reports(self, username: str, count: int = 10, page: int = 0) -> list[InstagramUserReportSchema]:
         async with ClientSession(base_url=self.API_URL) as session:
-            resp = await session.get("/api/user/" + username + "/report")
+            resp = await session.get("/api/report/user/" + username, params={"count": count, "page": page})
             if resp.status != 200:
                 raise ApiException(await resp.text())
             body = await resp.json()
@@ -62,6 +62,22 @@ class InstagramRepository:
                 raise ApiException(await resp.text())
             body = await resp.json()
         return [InstagramUserFollowersDifferenceSchema.model_validate(i) for i in body]
+
+    async def get_report_followers_difference(self, report_id: int) -> InstagramUserFollowersDifferenceSchema:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get(f"/api/follower/report/{report_id}/difference")
+            if resp.status != 200:
+                raise ApiException(await resp.text())
+            body = await resp.json()
+        return InstagramUserFollowersDifferenceSchema.model_validate(body)
+
+    async def get_report_followings_difference(self, report_id: int) -> InstagramUserFollowingDifferenceSchema:
+        async with ClientSession(base_url=self.API_URL) as session:
+            resp = await session.get(f"/api/following/report/{report_id}/difference")
+            if resp.status != 200:
+                raise ApiException(await resp.text())
+            body = await resp.json()
+        return InstagramUserFollowingDifferenceSchema.model_validate(body)
 
     async def get_user_following_difference(
         self, username: str
