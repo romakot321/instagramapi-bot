@@ -62,9 +62,7 @@ class TrackingFollowerService:
             await self.instagram_repository.get_report_followers_difference(report_id)
         )
 
-        usernames = []
-        for diff in followers_diff:
-            usernames += getattr(diff, paginate_key)
+        usernames = getattr(followers_diff, paginate_key)
         paginated_usernames = [
             usernames[i : i + on_page_count]
             for i in range(0, len(usernames), on_page_count)
