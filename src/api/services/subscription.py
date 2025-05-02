@@ -1,5 +1,9 @@
-from fastapi import Response, HTTPException
+from fastapi import Response, HTTPException, Request
 import datetime as dt
+import os
+import hmac
+import hashlib
+import base64
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +23,13 @@ class SubscriptionService[Table: Subscription, int](BaseService):
     response: Response
 
     tariffs_big_tracking = [{"id": 1, "price": 590, "access_days": 30, "text": "1 отчет в день за 590 руб."}]
+    CLOUDPAYMENTS_API_TOKEN = os.getenv("CLOUDPAYMENTS_API_TOKEN")
+
+    @classmethod
+    async def authorize_cloudpayments_webhook(cls, request: Request):
+        signature = base64.b64encode(hmac.new(cls.CLOUDPAYMENTS_API_TOKEN.encode(), await request.body(), digestmod=hashlib.sha256).digest())
+        if signature.decode() != request.headers["Content-HMAC"]:
+            raise HTTPException(401)
 
     async def get_tariffs_list(self) -> list[Tariff]:
         query = select(Tariff)
@@ -34,7 +45,7 @@ class SubscriptionService[Table: Subscription, int](BaseService):
             raise HTTPException(404)
         return model
 
-    async def create(self, schema: SubscriptionCreateSchema) -> Subscription:
+    async def create(self, schema: SubscriptionCreateSchema, cloudpayments_subscription_id: str) -> Subscription:
         if schema.tracking_username:
             current_subscription = await self._get_one(tracking_username=schema.tracking_username, user_telegram_id=schema.user_telegram_id, mute_not_found_exception=True)
             if current_subscription is not None:
@@ -47,21 +58,25 @@ class SubscriptionService[Table: Subscription, int](BaseService):
 
         tariff = await self.get_tariff(schema.tariff_id)
         expire_at = dt.datetime.now() + dt.timedelta(days=tariff.access_days)
+
         model = await self._create(
             user_telegram_id=schema.user_telegram_id,
             expire_at=expire_at,
             tracking_username=schema.tracking_username,
             tariff_id=schema.tariff_id,
-            requests_available=tariff.requests_balance
+            requests_available=tariff.requests_balance,
+            cloudpayments_subscription_id=cloudpayments_subscription_id,
+            cloudpayments_transaction_id=cloudpayments_transaction_id
         )
         await self._commit()
+
         await BotController.send_subscription_created(schema.user_telegram_id, schema.tracking_username)
         return model
 
     async def add_requests(self, schema: SubscriptionAddRequestsSchema) -> Subscription:
         tariff = await self.get_tariff(schema.tariff_id)
         subscription = await self.get(schema.user_telegram_id, schema.tracking_username)
-        model = await self.update(subscription.id, requests_available=tariff.requests_balance)
+        model = await self.update(subscription.id, requests_available=subscription.requests_available + tariff.requests_balance)
         await BotController.send_subscription_created(schema.user_telegram_id, schema.tracking_username)
         return model
 

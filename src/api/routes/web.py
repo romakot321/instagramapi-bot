@@ -15,6 +15,7 @@ from api.services.subscription import SubscriptionService
 
 router = APIRouter(tags=["Web"])
 templates = Jinja2Templates(directory="templates")
+CLOUDPAYMENTS_API_PUBLIC_ID = os.getenv("CLOUDPAYMENTS_API_PUBLIC_ID")
 
 templates.env.filters["humanize_seconds"] = lambda i: humanize.naturaldelta(dt.timedelta(seconds=int(i)))
 
@@ -34,7 +35,8 @@ async def paywall(
         {
             "request": request,
             "tariffs": tariffs,
-            "tracking_username": tracking_username
+            "tracking_username": tracking_username,
+            "CLOUDPAYMENTS_API_PUBLIC_ID": CLOUDPAYMENTS_API_PUBLIC_ID
         }
     )
 
@@ -51,7 +53,8 @@ async def paywall_requests(
         {
             "request": request,
             "tariffs": tariffs,
-            "tracking_username": tracking_username
+            "tracking_username": tracking_username,
+            "CLOUDPAYMENTS_API_PUBLIC_ID": CLOUDPAYMENTS_API_PUBLIC_ID
         }
     )
 

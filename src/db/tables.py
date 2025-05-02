@@ -123,9 +123,20 @@ class Subscription(BaseMixin, Base):
     user_telegram_id: M[int] = column(ForeignKey("users.telegram_id", ondelete="CASCADE"))
     renewal_enabled: M[bool] = column(server_default=true())
     requests_available: M[int]
+    cloudpayments_subscription_id: M[str] = column(doc="Cloudpayments SubscriptionId")
 
     user: M["User"] = relationship(back_populates="subscriptions", lazy="selectin")
     tariff: M["Tariff"] = relationship(back_populates="subscriptions", lazy="selectin")
+
+
+class Payment(BaseMixin, Base):
+    __tablename__ = "payments"
+
+    user_telegram_id: M[int] = column(ForeignKey("users.telegram_id", ondelete="CASCADE"))
+    cloudpayments_transaction_id: M[int] = column(doc="Cloudpayments TransactionId", type_=BIGINT)
+    cloudpayments_subscription_id: M[str | None] = column(doc="Cloudpayments SubscriptionId")
+    product: M[str] = column(doc="subscription, requests")
+    amount: M[float]
 
 
 class Partner(BaseMixin, Base):

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Доступ к полной статистике</title>
   <script src="https://telegram.org/js/telegram-web-app.js?57"></script>
+  <script src="https://widget.cloudpayments.ru/bundles/cloudpayments.js"></script>
   <style>
     html, body {
       height: 100%;
@@ -301,7 +302,7 @@
         <input name="tariff" type="radio">
         <div class="tariff-content">
           <div class="circle"></div>
-          <div class="tariff-info" data-tariff="1" onclick="selectPrice(this)">
+          <div class="tariff-info" data-tariff="1" data-price="590" onclick="selectPrice(this)">
             Отчет 1 раз в сутки<br>
             <span style="font-size:15px">590 ₽ <span class="muted">/ месяц</span></span>
           </div>
@@ -309,7 +310,7 @@
       </label>
       <!-- Тариф 2 -->
       <label class="tariff-label">
-        <input name="tariff" type="radio" data-tariff="2" onclick="selectPrice(this)">
+        <input name="tariff" type="radio" data-tariff="2" data-price="990" onclick="selectPrice(this)">
         <div class="tariff-content">
           <div class="circle"></div>
           <div class="tariff-info">
@@ -320,7 +321,7 @@
       </label>
       <!-- Тариф 3 -->
       <label class="tariff-label">
-        <input name="tariff" type="radio" checked data-tariff="3" onclick="selectPrice(this)">
+        <input name="tariff" type="radio" checked data-tariff="3" data-price="1790" onclick="selectPrice(this)">
         <div class="tariff-content">
           <span class="save-badge">SAVE 25%</span>
           <div class="circle"></div>
@@ -344,24 +345,70 @@
     }
 
     function getAccess() {
-        let selectedTariffId = document.querySelector('input[type=radio]:checked').dataset.tariff;
-        pay(selectedTariffId, window.Telegram.WebApp.initDataUnsafe.user.id);
+        let selectedTariff = document.querySelector('input[type=radio]:checked');
+        pay(selectedTariff.dataset.tariff, window.Telegram.WebApp.initDataUnsafe.user.id, selectedTariff.dataset.price);
     }
 
-    function pay(tariffId, userTelegramId) {
+    function pay(tariffId, userTelegramId, price) {
         {% if not tracking_username is none %}
             let trackingUsername = '{{ tracking_username }}';
         {% else %}
             let trackingUsername = null;
         {% endif %}
 
-        fetch("/api/subscription", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({tariff_id: +tariffId, user_telegram_id: +userTelegramId, tracking_username: trackingUsername})
+        var receipt = {
+            Items: [//товарные позиции
+                 {
+                    label: 'Оплата подписки на MyFollowers', //наименование товара
+                    price: price, //цена
+                    quantity: 1.00, //количество
+                    amount: price, //сумма
+                    vat: 0, //ставка НДС
+                    method: 0, // тег-1214 признак способа расчета - признак способа расчета
+                    object: 0, // тег-1212 признак предмета расчета - признак предмета товара, работы, услуги, платежа, выплаты, иного предмета расчета
+                }
+            ],
+            taxationSystem: 0, //система налогообложения; необязательный, если у вас одна система налогообложения
+            isBso: false, //чек является бланком строгой отчетности
+            amounts:
+            {
+                electronic: price, // Сумма оплаты электронными деньгами
+                advancePayment: 0.00, // Сумма из предоплаты (зачетом аванса) (2 знака после запятой)
+                credit: 0.00, // Сумма постоплатой(в кредит) (2 знака после запятой)
+                provision: 0.00 // Сумма оплаты встречным предоставлением (сертификаты, др. мат.ценности) (2 знака после запятой)
+            }
+        };
+
+        var data = {tariff_id: +tariffId, user_telegram_id: +userTelegramId, tracking_username: trackingUsername, product: 'subscription'};
+        data.CloudPayments = {
+            CustomerReceipt: receipt, //чек для первого платежа
+            recurrent: {
+                interval: "Month",
+                period: 1,
+                customerReceipt: receipt //чек для регулярных платежей
+            }
+        };
+
+        var widget = new cp.CloudPayments({
+            language: "ru-RU"
         })
-            .then(response => window.Telegram.WebApp.close())
-            .catch(err => console.error(err));
+        widget.pay('charge',
+            { //options
+                publicId: '{{ CLOUDPAYMENTS_API_PUBLIC_ID }}', //id из личного кабинета
+                description: 'Оплата подписки MyFollowers', //назначение
+                amount: amount, //сумма
+                currency: 'RUB', //валюта
+                accountId: '{{ user_id }}', //идентификатор плательщика (необязательно)
+                requireEmail: true,
+                skin: "modern", //дизайн виджета (необязательно)
+                autoClose: 3,
+                data: data
+            }, {
+                onSuccess: function(options) { window.Telegram.WebApp.close(); },
+                onFail: function(reason, options) { },
+                onComplete: function(paymentResult, options) { }
+            }
+        )
     }
 </script>
 </body>
