@@ -114,7 +114,7 @@ def init_web_application():
     application.include_router(subscription_router)
     application.include_router(web_router)
     application.include_router(user_router)
-    application.mount("/static", StaticFiles(directory="static"), name="static")
+    application.mount("/static", StaticFiles(directory="/app/static"), name="static")
 
     # attach_admin_panel(application)
 

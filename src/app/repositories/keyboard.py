@@ -20,6 +20,7 @@ from app.schemas.texts import media_display_url_to_emoji
 from db.tables import Tariff, Tracking, TrackingMedia
 
 BOT_WEBHOOK_URL = os.getenv("BOT_WEBHOOK_URL", "")
+BOT_WEBHOOK_URL = "https://my-followers.online"
 humanize.i18n.activate("RU_ru")
 
 
@@ -116,7 +117,12 @@ class KeyboardRepository:
 
     def build_to_paywall_keyboard(self) -> types.InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.button(**Action.subscription_add.model_dump())
+        builder.button(
+            text="Приобрести подписку",
+            callback_data=SubscriptionActionCallback(
+                action=Action.subscription_add.action, ig_u=None, t_id=-1
+            ).pack(),
+        )
         builder.adjust(1)
         return builder.as_markup()
 

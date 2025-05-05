@@ -33,7 +33,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_payments_id'), 'payments', ['id'], unique=False)
     op.drop_constraint('referrals_partner_id_fkey', 'referrals', type_='foreignkey')
     op.create_foreign_key(None, 'referrals', 'partners', ['partner_id'], ['id'], ondelete='CASCADE')
-    op.add_column('subscriptions', sa.Column('cloudpayments_subscription_id', sa.String(), nullable=False))
+    op.add_column('subscriptions', sa.Column('cloudpayments_subscription_id', sa.String(), nullable=True))
     # ### end Alembic commands ###
 
 
