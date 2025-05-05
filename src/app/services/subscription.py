@@ -19,6 +19,7 @@ from app.schemas.action_callback import (
 )
 from app.schemas.message import TextMessage
 from app.schemas.texts import build_subscription_info_text, subscription_paywall_text
+from app.schemas.texts import agreements_paywall_text
 from app.services.utils import build_aiogram_method
 from db.tables import Subscription
 
@@ -76,13 +77,25 @@ class SubscriptionService:
 
     async def handle_subscription_add(
         self, tg_object: CallbackQuery | Message, data: SubscriptionActionCallback
-    ) -> TelegramMethod:
-        message = TextMessage(
+    ) -> list[TelegramMethod]:
+        message1 = TextMessage(
             text=subscription_paywall_text,
-            reply_markup=self.keyboard_repository.build_paywall_keyboard(data.ig_u, data.t_id),
-            parse_mode="MarkdownV2"
+            reply_markup=self.keyboard_repository.build_paywall_keyboard(
+                data.ig_u, data.t_id
+            ),
+            parse_mode="MarkdownV2",
         )
-        return build_aiogram_method(None, tg_object=tg_object, message=message)
+        message2 = TextMessage(
+            text=agreements_paywall_text,
+            reply_markup=self.keyboard_repository.build_paywall_keyboard(
+                data.ig_u, data.t_id
+            ),
+            parse_mode="MarkdownV2",
+        )
+        return [
+            build_aiogram_method(None, tg_object=tg_object, message=message1),
+            build_aiogram_method(None, tg_object=tg_object, message=message2, use_edit=False),
+        ]
 
     async def handle_subscription_upgrade(
         self, query: CallbackQuery, data: SubscriptionActionCallback

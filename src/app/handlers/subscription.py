@@ -90,8 +90,8 @@ async def subscription_add(
         SubscriptionService, Depends(SubscriptionService.init)
     ],
 ):
-    method = await subscription_service.handle_subscription_add(query, callback_data)
-    await bot(method)
+    for method in (await subscription_service.handle_subscription_add(query, callback_data)):
+        await bot(method)
 
 
 @router.callback_query(
