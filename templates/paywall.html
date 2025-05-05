@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://widget.cloudpayments.ru">
   <title>Доступ к полной статистике</title>
   <script src="https://telegram.org/js/telegram-web-app.js?57"></script>
   <script src="https://widget.cloudpayments.ru/bundles/cloudpayments.js"></script>
@@ -299,10 +300,10 @@
     <div class="tariffs">
       <!-- Тариф 1 -->
       <label class="tariff-label">
-        <input name="tariff" type="radio">
+        <input name="tariff" type="radio" data-tariff="1" data-price="590" onclick="selectPrice(this)">
         <div class="tariff-content">
           <div class="circle"></div>
-          <div class="tariff-info" data-tariff="1" data-price="590" onclick="selectPrice(this)">
+          <div class="tariff-info">
             Отчет 1 раз в сутки<br>
             <span style="font-size:15px">590 ₽ <span class="muted">/ месяц</span></span>
           </div>
@@ -355,6 +356,7 @@
         {% else %}
             let trackingUsername = null;
         {% endif %}
+		    console.log(tariffId, userTelegramId, price);
 
         var receipt = {
             Items: [//товарные позиции
@@ -392,22 +394,24 @@
         var widget = new cp.CloudPayments({
             language: "ru-RU"
         })
-        widget.pay('charge',
+        widget.charge(
             { //options
                 publicId: '{{ CLOUDPAYMENTS_API_PUBLIC_ID }}', //id из личного кабинета
                 description: 'Оплата подписки MyFollowers', //назначение
-                amount: amount, //сумма
+                amount: price, //сумма
                 currency: 'RUB', //валюта
                 accountId: '{{ user_id }}', //идентификатор плательщика (необязательно)
                 requireEmail: true,
                 skin: "modern", //дизайн виджета (необязательно)
                 autoClose: 3,
                 data: data
-            }, {
-                onSuccess: function(options) { window.Telegram.WebApp.close(); },
-                onFail: function(reason, options) { },
-                onComplete: function(paymentResult, options) { }
-            }
+            },
+	    function (options) { // success
+		window.Telegram.WebApp.close();	
+	    },
+	    function (reason, options) { // fail
+		//действие при неуспешной оплате
+	    }
         )
     }
 </script>

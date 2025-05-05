@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body
 
 from api.schemas.payment import PaymentProduct
 from api.schemas.subscription import (

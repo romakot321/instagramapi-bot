@@ -1,6 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, Field, model_validator
 from urllib.parse import unquote
+import json
 import datetime as dt
 
 
@@ -14,6 +15,15 @@ class PaymentDataSchema(BaseModel):
     tariff_id: int
     product: PaymentProduct
     tracking_username: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def parse_from_string(cls, value) -> dict:
+        if isinstance(value, bytes):
+            value = value.decode()
+        if not isinstance(value, str):
+            return value
+        return json.loads(value.replace("+", " "))
 
 
 class PaymentSchema(BaseModel):
@@ -39,4 +49,6 @@ class PaymentSchema(BaseModel):
         items = unquote(value).split("&")
         state = {key: value for key, value in list(map(lambda i: i.split("="), items))}
         state["DateTime"] = dt.datetime.fromisoformat(state["DateTime"])
+        if "Data" in state:
+            state["Data"] = PaymentDataSchema.parse_from_string(state["Data"])
         return state

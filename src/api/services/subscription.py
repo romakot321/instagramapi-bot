@@ -66,7 +66,6 @@ class SubscriptionService[Table: Subscription, int](BaseService):
             tariff_id=schema.tariff_id,
             requests_available=tariff.requests_balance,
             cloudpayments_subscription_id=cloudpayments_subscription_id,
-            cloudpayments_transaction_id=cloudpayments_transaction_id
         )
         await self._commit()
 

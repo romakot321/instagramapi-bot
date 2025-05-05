@@ -82,7 +82,7 @@ class PaginatedActionCallback(ActionCallback, prefix='paginated_action'):
 
 
 class TrackingActionCallback(PaginatedActionCallback, prefix="t_action"):
-    username: str
+    username: str | None
 
 
 class TrackingMediaActionCallback(PaginatedActionCallback, prefix="m_action"):
@@ -91,7 +91,7 @@ class TrackingMediaActionCallback(PaginatedActionCallback, prefix="m_action"):
 
 
 class SubscriptionActionCallback(ActionCallback, prefix="s_action"):
-    ig_u: str  # Instagram username
+    ig_u: str | None # Instagram username
     t_id: int  # Tariff id
 
 
