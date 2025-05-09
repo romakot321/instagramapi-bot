@@ -80,9 +80,6 @@ class SubscriptionService:
     ) -> list[TelegramMethod]:
         message1 = TextMessage(
             text=subscription_paywall_text,
-            reply_markup=self.keyboard_repository.build_paywall_keyboard(
-                data.ig_u, data.t_id
-            ),
             parse_mode="MarkdownV2",
         )
         message2 = TextMessage(
