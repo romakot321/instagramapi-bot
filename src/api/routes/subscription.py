@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Body
+from loguru import logger
 
 from api.schemas.payment import PaymentProduct
 from api.schemas.subscription import (
@@ -23,6 +24,7 @@ async def create_subscription(
     tracking_service: TrackingService = Depends(TrackingService.depend),
     payment_service: PaymentService = Depends(PaymentService.depend),
 ):
+    logger.debug(f"Received payment: {schema=}")
     if schema.data is None or schema.subscription_id is None:
         return {"code": 13}
 

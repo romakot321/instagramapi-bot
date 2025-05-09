@@ -300,12 +300,12 @@
     <div class="tariffs">
       <!-- Тариф 1 -->
       <label class="tariff-label">
-        <input name="tariff" type="radio" data-tariff="1" data-price="590" onclick="selectPrice(this)">
+        <input name="tariff" type="radio" data-tariff="1" data-price="10" onclick="selectPrice(this)">
         <div class="tariff-content">
           <div class="circle"></div>
           <div class="tariff-info">
             Отчет 1 раз в сутки<br>
-            <span style="font-size:15px">590 ₽ <span class="muted">/ месяц</span></span>
+            <span style="font-size:15px">10 ₽ <span class="muted">/ день</span></span>
           </div>
         </div>
       </label>
@@ -385,7 +385,7 @@
         data.CloudPayments = {
             CustomerReceipt: receipt, //чек для первого платежа
             recurrent: {
-                interval: "Month",
+                interval: "Day",
                 period: 1,
                 customerReceipt: receipt //чек для регулярных платежей
             }
@@ -394,13 +394,13 @@
         var widget = new cp.CloudPayments({
             language: "ru-RU"
         })
-        widget.charge(
+	widget.charge(
             { //options
                 publicId: '{{ CLOUDPAYMENTS_API_PUBLIC_ID }}', //id из личного кабинета
                 description: 'Оплата подписки MyFollowers', //назначение
                 amount: price, //сумма
                 currency: 'RUB', //валюта
-                accountId: '{{ user_id }}', //идентификатор плательщика (необязательно)
+                accountId: userTelegramId.toString(), //идентификатор плательщика (необязательно)
                 requireEmail: true,
                 skin: "modern", //дизайн виджета (необязательно)
                 autoClose: 3,
