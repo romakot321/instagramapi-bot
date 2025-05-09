@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram import types as types
 from aiogram.methods import EditMessageText, TelegramMethod
 
+from app.repositories.cloudpayments import CloudpaymentsRepository
 from app.repositories.instagram import InstagramRepository
 from app.repositories.keyboard import KeyboardRepository
 from app.repositories.subscription import SubscriptionRepository
@@ -28,12 +29,14 @@ class SubscriptionService:
     def __init__(
         self,
         subscription_repository: SubscriptionRepository,
+        cloudpayments_repository: CloudpaymentsRepository,
         keyboard_repository: KeyboardRepository,
         user_repository: UserRepository,
     ):
         self.subscription_repository = subscription_repository
         self.keyboard_repository = keyboard_repository
         self.user_repository = user_repository
+        self.cloudpayments_repository = cloudpayments_repository
 
     @classmethod
     def init(
@@ -42,11 +45,15 @@ class SubscriptionService:
             SubscriptionRepository, Depends(SubscriptionRepository.depend)
         ],
         keyboard_repository: Annotated[KeyboardRepository, Depends(KeyboardRepository)],
+        cloudpayments_repository: Annotated[
+            CloudpaymentsRepository, Depends(CloudpaymentsRepository)
+        ],
         user_repository: Annotated[UserRepository, Depends(UserRepository.init)],
     ):
         return cls(
             subscription_repository=subscription_repository,
             keyboard_repository=keyboard_repository,
+            cloudpayments_repository=cloudpayments_repository,
             user_repository=user_repository,
         )
 
@@ -80,9 +87,6 @@ class SubscriptionService:
     ) -> list[TelegramMethod]:
         message1 = TextMessage(
             text=subscription_paywall_text,
-            reply_markup=self.keyboard_repository.build_paywall_keyboard(
-                data.ig_u, data.t_id
-            ),
             parse_mode="MarkdownV2",
         )
         message2 = TextMessage(
@@ -94,7 +98,9 @@ class SubscriptionService:
         )
         return [
             build_aiogram_method(None, tg_object=tg_object, message=message1),
-            build_aiogram_method(None, tg_object=tg_object, message=message2, use_edit=False),
+            build_aiogram_method(
+                None, tg_object=tg_object, message=message2, use_edit=False
+            ),
         ]
 
     async def handle_subscription_upgrade(
@@ -133,4 +139,27 @@ class SubscriptionService:
                 data.username
             ),
         )
+        return build_aiogram_method(None, tg_object=query, message=message)
+
+    async def handle_subscription_cancel(self, query: CallbackQuery):
+        subscriptions = await self.subscription_repository.get_by_telegram_id(
+            query.from_user.id
+        )
+        if any(
+            [
+                await self.cloudpayments_repository.cancel_subscription_renewal(
+                    subscription.cloudpayments_subscription_id
+                )
+                for subscription in subscriptions
+            ]
+        ):
+            [
+                await self.subscription_repository.update(sub.id, renewal_enabled=False)
+                for sub in subscriptions
+            ]
+            message = TextMessage(text="Автопродление подписки отменено")
+        else:
+            message = TextMessage(
+                text="При отмене произошла ошибка. Вы можете проверить свои подписки по ссылке: https://my.cloudpayments.ru"
+            )
         return build_aiogram_method(None, tg_object=query, message=message)

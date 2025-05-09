@@ -31,6 +31,18 @@ async def subscription_menu_query(
     await bot(method)
 
 
+@router.callback_query(
+    ActionCallback.filter(F.action == Action.subscription_cancel.action)
+)
+async def subscription_cancel(
+    query: CallbackQuery,
+    bot: Bot,
+    subscription_service: Annotated[SubscriptionService, Depends(SubscriptionService.init)]
+):
+    method = await subscription_service.handle_subscription_cancel(query)
+    await bot(method)
+
+
 @router.message(F.text == Action.subscription_menu.text)
 async def subscription_menu_message(
     message: Message,
